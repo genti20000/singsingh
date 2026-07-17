@@ -1,9 +1,12 @@
 const MIME=new Set(['image/jpeg','image/png','image/webp','image/heic','video/mp4','video/webm','video/quicktime']);
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store'}});
 const fail=(message,status=500)=>json({error:message},status);
+let schemaReady;
+const ensureSchema=env=>schemaReady??=(async()=>{await env.DB.prepare("CREATE TABLE IF NOT EXISTS submissions (id TEXT PRIMARY KEY,media_key TEXT NOT NULL UNIQUE,media_type TEXT NOT NULL CHECK(media_type IN ('image','video')),caption TEXT,share_consent INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,approved_at TEXT,is_shared INTEGER NOT NULL DEFAULT 0)").run();await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_submissions_status_created ON submissions(status,created_at DESC)').run()})().catch(e=>{schemaReady=undefined;throw e});
 export default {async fetch(request,env){
   const url=new URL(request.url);const path=url.pathname;
   try{
+    if(path.startsWith('/api/'))await ensureSchema(env);
     if(path==='/api/submissions'&&request.method==='GET'){
       const where=[],vals=[];const status=url.searchParams.get('status'),media=url.searchParams.get('media');
       if(status&&status!=='all'){where.push('status = ?');vals.push(status)}if(media&&media!=='all'){where.push('media_type = ?');vals.push(media)}

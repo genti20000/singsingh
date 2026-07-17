@@ -1,0 +1,1 @@
+{"version":1,"project_id":"appgprj_6a59b94cdb9881918983099819423ec2","framework":"nextjs","build_command":"pnpm sites:build","output_directory":".open-next","bindings":{"DB":{"type":"d1","name":"singshot-submissions","schema":"db/schema.sql"},"MEDIA":{"type":"r2","name":"singshot-media"}}}

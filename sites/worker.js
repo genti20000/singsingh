@@ -14,8 +14,8 @@ const ensureSchema=env=>schemaReady??=(async()=>{await env.DB.prepare("CREATE TA
 export default {async fetch(request,env){
   const url=new URL(request.url);const path=url.pathname;
   try{
-    if(path==='/api/admin/login'&&request.method==='POST'){const {pin}=await request.json();if(!env.ADMIN_PIN||String(pin)!==String(env.ADMIN_PIN))return fail('Incorrect passcode.',401);const token=await adminToken(env);return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','set-cookie':`singshot_admin=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200`}})}
-    if(path==='/api/admin/session')return (await isAdmin(request,env))?json({ok:true}):fail('Staff sign-in required.',401);
+    if(path==='/api/staff-login'&&request.method==='POST'){const {pin}=await request.json();if(!env.ADMIN_PIN||String(pin)!==String(env.ADMIN_PIN))return fail('Incorrect passcode.',401);const token=await adminToken(env);return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','set-cookie':`singshot_admin=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200`}})}
+    if(path==='/api/staff-session')return (await isAdmin(request,env))?json({ok:true}):fail('Staff sign-in required.',401);
     if(path.startsWith('/api/'))await ensureSchema(env);
     if(path==='/api/submissions'&&request.method==='GET'){
       const where=[],vals=[];const status=url.searchParams.get('status'),media=url.searchParams.get('media');

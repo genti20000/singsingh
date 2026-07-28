@@ -52,7 +52,9 @@ return <main className="gallery-showcase">
   </div>
   <div className="showcase-overlay">
     <div className="showcase-heading"><Brand/><div><span>LIVE</span><h1>Wall of Fame</h1></div></div>
-    <a className="showcase-qr" href="/" aria-label="Upload your SingShot"><CustomerQR compact/></a>
+    <a className="showcase-qr" href="/" aria-label="Upload your SingShot"><CustomerQR compact/><strong>SCAN · SNAP · BE THE NEXT STAR</strong></a>
   </div>
+  {photos.length>0&&<div className={`showcase-scene-label ${phase==='individual'&&currentIndex===0?'is-newest':''}`}><span>{phase==='collage'?'TONIGHT’S STARS':currentIndex===0?'NEWEST STAR':'NOW ON STAGE'}</span><b>{phase==='collage'?`${photos.length} MOMENTS LIVE`:current?.caption||'SINGSHOT STAR'}</b></div>}
+  {phase==='individual'&&currentIndex===0&&<div className="showcase-confetti" aria-hidden="true">{Array.from({length:14},(_,i)=><i key={i} style={{'--confetti-index':i} as React.CSSProperties}/>)}</div>}
   <div className="showcase-status">{error&&<span className="showcase-error">{error}</span>}{photos.length>0&&<><span className="photo-count">{phase==='collage'?`ALL STARS${collagePages>1?` · ${collagePage+1}/${collagePages}`:''}`:`${currentIndex+1} / ${photos.length}`}</span><span className="progress-track" aria-hidden="true" style={{'--scene-duration':`${sceneDuration}ms`} as React.CSSProperties}><i key={`${phase}-${collagePage}-${current?.id}`}/></span></>}</div>
 </main>}

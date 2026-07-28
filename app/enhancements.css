@@ -31,9 +31,13 @@
 .showcase-qr .customer-qr b{font-size:clamp(9px,.65vw,12px)}
 .showcase-qr .customer-qr small{font-size:clamp(7px,.5vw,9px)}
 .showcase-wall{padding:clamp(100px,13vh,142px) clamp(10px,1.5vw,28px) clamp(46px,6vh,68px)}
-.showcase-photo{inset:0;box-sizing:border-box;padding:clamp(96px,12vh,132px) clamp(8px,1vw,18px) clamp(48px,6vh,68px)}
+.showcase-photo{--solo-top:clamp(96px,12vh,132px);--solo-side:clamp(8px,1vw,18px);--solo-bottom:clamp(48px,6vh,68px);inset:0;box-sizing:border-box;padding:0}
 .showcase-photo .showcase-backdrop{position:absolute;inset:-5%;width:110%;height:110%}
-.showcase-main{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain!important;object-position:center}
+.showcase-photo .showcase-main{position:absolute!important;z-index:1;top:var(--solo-top);right:var(--solo-side);bottom:var(--solo-bottom);left:var(--solo-side);width:calc(100% - (var(--solo-side) * 2))!important;height:calc(100% - var(--solo-top) - var(--solo-bottom))!important;max-width:none!important;max-height:none!important;object-fit:contain!important;object-position:center}
+.showcase-photo.current.is-ready .showcase-main{animation:soloSpotlight 7s ease-in-out both}
+.showcase-photo.current.is-ready .showcase-backdrop{animation:soloBackdrop 7s ease-in-out both}
+.showcase-heading{animation:venueHeaderGlow 4.8s ease-in-out infinite}
+.showcase-qr .customer-qr{animation:venueQrGlow 3.6s ease-in-out infinite}
 .showcase-photo figcaption{bottom:clamp(46px,6vh,68px);max-width:min(62vw,900px);font-size:clamp(17px,1.5vw,28px)}
 @media(max-width:560px){
   .showcase-overlay{padding:8px}
@@ -42,6 +46,11 @@
   .showcase-qr .customer-qr{padding:4px}
   .showcase-qr .customer-qr img{width:60px;height:60px}
   .showcase-wall{padding:82px 6px 42px}
-  .showcase-photo{padding:76px 4px 42px}
+  .showcase-photo{--solo-top:76px;--solo-side:4px;--solo-bottom:42px}
   .showcase-photo figcaption{bottom:42px}
 }
+@keyframes soloSpotlight{0%{opacity:0;filter:brightness(.82) drop-shadow(0 18px 35px #000c)}14%{opacity:1;filter:brightness(1.08) drop-shadow(0 22px 48px #ff3e9d55)}72%{filter:brightness(1) drop-shadow(0 22px 48px #9d59ff44)}100%{opacity:1;filter:brightness(.96) drop-shadow(0 18px 38px #000b)}}
+@keyframes soloBackdrop{0%{opacity:.38;filter:blur(46px) brightness(.18) saturate(1.1)}45%{opacity:.62;filter:blur(38px) brightness(.3) saturate(1.35)}100%{opacity:.45;filter:blur(44px) brightness(.22) saturate(1.2)}}
+@keyframes venueHeaderGlow{50%{box-shadow:0 18px 55px #9d59ff35;border-color:#ffe23b66}}
+@keyframes venueQrGlow{50%{box-shadow:4px 4px 0 var(--pink),0 0 28px #ffe23b38}}
+@media(prefers-reduced-motion:reduce){.showcase-photo.current.is-ready .showcase-main,.showcase-photo.current.is-ready .showcase-backdrop,.showcase-heading,.showcase-qr .customer-qr{animation:none!important}}

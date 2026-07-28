@@ -124,3 +124,38 @@
 .media-preview.batch-preview>figure{min-height:180px;background:#0d0913}
 .media-preview.batch-preview img,.media-preview.batch-preview video{max-height:none;object-fit:contain}
 @media(max-width:560px){.media-preview.batch-preview{grid-auto-rows:150px}.media-preview.batch-preview>figure{min-height:150px}}
+
+/* Paired random slide entrances and exits. */
+.showcase-photo.current.is-ready.transition-slide-left .showcase-main{animation:photoSlideLeftIn 1s cubic-bezier(.16,.84,.24,1) both,soloGlowHold 6s 1s ease-in-out both}
+.showcase-photo.current.is-ready.transition-slide-right .showcase-main{animation:photoSlideRightIn 1s cubic-bezier(.16,.84,.24,1) both,soloGlowHold 6s 1s ease-in-out both}
+.showcase-photo.current.is-ready.transition-slide-up .showcase-main{animation:photoSlideUpIn 1s cubic-bezier(.16,.84,.24,1) both,soloGlowHold 6s 1s ease-in-out both}
+.showcase-photo.current.is-ready.transition-slide-down .showcase-main{animation:photoSlideDownIn 1s cubic-bezier(.16,.84,.24,1) both,soloGlowHold 6s 1s ease-in-out both}
+.showcase-photo.current.is-ready.transition-slide-diagonal .showcase-main{animation:photoSlideDiagonalIn 1.05s cubic-bezier(.16,.84,.24,1) both,soloGlowHold 5.95s 1.05s ease-in-out both}
+.showcase-photo.previous.fade-away.exit-slide-left{animation:photoSlideLeftOut .85s cubic-bezier(.6,0,.84,.16) both}
+.showcase-photo.previous.fade-away.exit-slide-right{animation:photoSlideRightOut .85s cubic-bezier(.6,0,.84,.16) both}
+.showcase-photo.previous.fade-away.exit-slide-up{animation:photoSlideUpOut .85s cubic-bezier(.6,0,.84,.16) both}
+.showcase-photo.previous.fade-away.exit-slide-down{animation:photoSlideDownOut .85s cubic-bezier(.6,0,.84,.16) both}
+.showcase-photo.previous.fade-away.exit-slide-diagonal{animation:photoSlideDiagonalOut .9s cubic-bezier(.6,0,.84,.16) both}
+@keyframes photoSlideLeftIn{from{opacity:0;transform:translateX(24vw);filter:blur(8px) brightness(1.3)}to{opacity:1;transform:none;filter:brightness(1) drop-shadow(0 20px 44px #9d59ff44)}}
+@keyframes photoSlideRightIn{from{opacity:0;transform:translateX(-24vw);filter:blur(8px) brightness(1.3)}to{opacity:1;transform:none;filter:brightness(1) drop-shadow(0 20px 44px #ff3e9d44)}}
+@keyframes photoSlideUpIn{from{opacity:0;transform:translateY(22vh);filter:blur(8px)}to{opacity:1;transform:none;filter:brightness(1) drop-shadow(0 20px 44px #ffe23b38)}}
+@keyframes photoSlideDownIn{from{opacity:0;transform:translateY(-22vh);filter:blur(8px)}to{opacity:1;transform:none;filter:brightness(1) drop-shadow(0 20px 44px #9d59ff44)}}
+@keyframes photoSlideDiagonalIn{from{opacity:0;transform:translate(18vw,16vh) rotate(2deg);filter:blur(9px)}to{opacity:1;transform:none;filter:brightness(1) drop-shadow(0 20px 44px #ff3e9d44)}}
+@keyframes photoSlideLeftOut{to{opacity:0;transform:translateX(-28vw);filter:blur(8px)}}
+@keyframes photoSlideRightOut{to{opacity:0;transform:translateX(28vw);filter:blur(8px)}}
+@keyframes photoSlideUpOut{to{opacity:0;transform:translateY(-26vh);filter:blur(8px)}}
+@keyframes photoSlideDownOut{to{opacity:0;transform:translateY(26vh);filter:blur(8px)}}
+@keyframes photoSlideDiagonalOut{to{opacity:0;transform:translate(-20vw,-18vh) rotate(-2deg);filter:blur(9px)}}
+
+/* Refined venue interface. */
+.gallery-showcase{background:linear-gradient(145deg,#07040b,#120817 58%,#07040b)}
+.showcase-overlay{background:linear-gradient(180deg,#08050de8 0,#08050d99 58%,transparent 100%);padding-bottom:clamp(34px,4vw,58px)}
+.showcase-heading{border-color:#ffffff24;border-radius:2px;background:linear-gradient(125deg,#160c20ef,#0d0915e6);box-shadow:0 20px 55px #000a,0 0 0 1px #9d59ff18}
+.showcase-heading h1{letter-spacing:-.025em}
+.showcase-qr .customer-qr{border-radius:2px;background:#fffdf4}
+.showcase-photo:before{content:"";position:absolute;z-index:2;top:var(--solo-top);right:var(--solo-side);bottom:var(--solo-bottom);left:var(--solo-side);border:1px solid #ffffff18;box-shadow:inset 0 0 55px #0007,0 0 45px #9d59ff15;pointer-events:none}
+.showcase-status{padding:8px 11px;width:max-content;max-width:45vw;border:1px solid #ffffff18;background:#10091ca8;backdrop-filter:blur(10px)}
+.progress-track{height:3px;border-radius:4px;background:#ffffff24}.progress-track i{border-radius:4px;box-shadow:0 0 12px var(--yellow)}
+.photo-count{font-variant-numeric:tabular-nums}
+@media(max-width:700px){.showcase-status{max-width:48vw;padding:5px 7px}.showcase-overlay{padding-bottom:28px}}
+@media(prefers-reduced-motion:reduce){.showcase-photo.current.is-ready .showcase-main,.showcase-photo.previous.fade-away{animation:none!important;transform:none!important;filter:none!important}}

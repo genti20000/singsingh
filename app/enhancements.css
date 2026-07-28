@@ -69,3 +69,27 @@
 .auto-approve-setting>button:disabled{opacity:.65;cursor:wait}
 @media(max-width:600px){.auto-approve-setting{align-items:flex-start;flex-direction:column}.auto-approve-setting>button{align-self:stretch;justify-content:center}}
 @media(prefers-reduced-motion:reduce){.auto-approve-setting>button>span,.auto-approve-setting>button>span:after{transition:none}}
+
+/* Randomised live-wall scene transitions; every animation finishes fully contained. */
+.showcase-photo.current.is-ready.transition-neon-wipe .showcase-main{animation:neonWipe 1.15s cubic-bezier(.2,.8,.2,1) both,soloGlowHold 5.85s 1.15s ease-in-out both}
+.showcase-photo.current.is-ready.transition-soft-flip .showcase-main{animation:softFlip 1.05s cubic-bezier(.2,.75,.2,1) both,soloGlowHold 5.95s 1.05s ease-in-out both}
+.showcase-photo.current.is-ready.transition-colour-bloom .showcase-main{animation:colourBloom 1.2s ease-out both,soloGlowHold 5.8s 1.2s ease-in-out both}
+.showcase-photo.current.is-ready.transition-curtain-reveal .showcase-main{animation:curtainReveal 1.1s cubic-bezier(.4,0,.2,1) both,soloGlowHold 5.9s 1.1s ease-in-out both}
+.showcase-photo.current.is-ready.transition-spotlight-sweep .showcase-main{animation:spotlightSweep 1.25s ease-out both,soloGlowHold 5.75s 1.25s ease-in-out both}
+.showcase-wall.transition-neon-wipe figure{animation:wallNeonWipe .85s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--wall-delay)}
+.showcase-wall.transition-soft-flip figure{animation:wallSoftFlip .8s ease-out both;animation-delay:var(--wall-delay)}
+.showcase-wall.transition-colour-bloom figure{animation:wallColourBloom .9s ease-out both;animation-delay:var(--wall-delay)}
+.showcase-wall.transition-curtain-reveal figure{animation:wallCurtain .9s ease-out both;animation-delay:var(--wall-delay)}
+.showcase-wall.transition-spotlight-sweep figure{animation:wallSpotlight .9s ease-out both;animation-delay:var(--wall-delay)}
+@keyframes neonWipe{0%{opacity:0;clip-path:inset(0 100% 0 0);filter:brightness(1.8) saturate(1.8) drop-shadow(-24px 0 22px #ffe23bcc)}65%{opacity:1;clip-path:inset(0);filter:brightness(1.2) saturate(1.25) drop-shadow(18px 0 34px #ff3e9d99)}100%{opacity:1;clip-path:inset(0);filter:brightness(1) saturate(1) drop-shadow(0 20px 44px #9d59ff44)}}
+@keyframes softFlip{0%{opacity:0;transform:perspective(1200px) rotateY(-72deg);filter:brightness(.7)}100%{opacity:1;transform:perspective(1200px) rotateY(0);filter:brightness(1) drop-shadow(0 20px 44px #9d59ff44)}}
+@keyframes colourBloom{0%{opacity:0;filter:blur(18px) grayscale(1) brightness(1.7)}55%{opacity:1;filter:blur(0) grayscale(.15) brightness(1.25) saturate(1.5)}100%{opacity:1;filter:brightness(1) saturate(1) drop-shadow(0 20px 44px #ff3e9d44)}}
+@keyframes curtainReveal{0%{opacity:0;clip-path:inset(0 50%);filter:brightness(.55)}100%{opacity:1;clip-path:inset(0);filter:brightness(1) drop-shadow(0 20px 44px #ffe23b38)}}
+@keyframes spotlightSweep{0%{opacity:0;clip-path:circle(0 at 20% 12%);filter:brightness(1.8) saturate(.4)}100%{opacity:1;clip-path:circle(145% at 50% 50%);filter:brightness(1) saturate(1) drop-shadow(0 20px 44px #9d59ff44)}}
+@keyframes soloGlowHold{0%,100%{filter:brightness(1) drop-shadow(0 20px 44px #9d59ff44)}50%{filter:brightness(1.08) drop-shadow(0 24px 58px #ff3e9d55)}}
+@keyframes wallNeonWipe{from{opacity:0;clip-path:inset(0 100% 0 0);filter:brightness(1.5)}to{opacity:1;clip-path:inset(0);filter:none}}
+@keyframes wallSoftFlip{from{opacity:0;transform:perspective(900px) rotateY(-58deg)}to{opacity:1;transform:none}}
+@keyframes wallColourBloom{from{opacity:0;filter:blur(12px) saturate(2)}to{opacity:1;filter:none}}
+@keyframes wallCurtain{from{opacity:0;clip-path:inset(0 50%)}to{opacity:1;clip-path:inset(0)}}
+@keyframes wallSpotlight{from{opacity:0;clip-path:circle(0 at 50% 50%)}to{opacity:1;clip-path:circle(75% at 50% 50%)}}
+@media(prefers-reduced-motion:reduce){.showcase-photo.current.is-ready .showcase-main,.showcase-wall figure{animation:none!important;clip-path:none!important;transform:none!important;filter:none!important}}

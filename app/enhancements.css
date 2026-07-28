@@ -159,3 +159,27 @@
 .photo-count{font-variant-numeric:tabular-nums}
 @media(max-width:700px){.showcase-status{max-width:48vw;padding:5px 7px}.showcase-overlay{padding-bottom:28px}}
 @media(prefers-reduced-motion:reduce){.showcase-photo.current.is-ready .showcase-main,.showcase-photo.previous.fade-away{animation:none!important;transform:none!important;filter:none!important}}
+
+/* Screenshot-matched black-and-gold Wall of Fame composition. */
+.gallery-showcase{background:#050506}
+.showcase-overlay{height:clamp(96px,11.5vh,126px);align-items:center;padding:clamp(10px,1.4vw,20px) clamp(18px,2.8vw,48px);border-bottom:1px solid #ffc40066;background:linear-gradient(180deg,#070708 0,#08070be8 100%)}
+.showcase-heading{padding:0;background:transparent;border:0;box-shadow:none;gap:clamp(16px,1.8vw,28px)}
+.showcase-heading .brand{font-size:clamp(22px,1.8vw,34px)}
+.showcase-heading>div:last-child{border-left:2px solid #ffc400;padding-left:clamp(15px,1.5vw,24px)}
+.showcase-heading span{color:#ffc400}
+.showcase-heading h1{font-size:clamp(24px,2.35vw,42px);letter-spacing:-.035em}
+.showcase-club-badge{position:absolute;z-index:2;left:50%;top:4px;translate:-50% 0;width:clamp(92px,8.8vw,142px);height:clamp(92px,8.8vw,142px);object-fit:contain;border-radius:50%;filter:drop-shadow(0 0 16px #ffc40055)}
+.showcase-qr{gap:4px}.showcase-qr .customer-qr{padding:5px 7px;background:#09090a;color:#fff;border:1px solid #ffc40099;box-shadow:0 0 14px #ffc4004a}.showcase-qr .customer-qr img{width:clamp(58px,4.7vw,78px);height:clamp(58px,4.7vw,78px)}.showcase-qr .customer-qr b{color:#ffc400}.showcase-qr>strong{padding:2px 5px;background:transparent;border:0;box-shadow:none;font-size:clamp(7px,.55vw,10px)}
+.showcase-wall{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:clamp(8px,.85vw,15px);padding:clamp(110px,13vh,142px) clamp(18px,2vw,36px) clamp(50px,6vh,68px);background:radial-gradient(circle at 50% 105%,#4b164a38,transparent 42%),#050506}
+.showcase-wall.count-1{grid-template-columns:1fr;grid-template-rows:1fr}.showcase-wall.count-2{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr}.showcase-wall.count-3{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr}.showcase-wall.count-4{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr)}.showcase-wall.count-5,.showcase-wall.count-6{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr)}
+.showcase-wall figure{border:1px solid #ffc40088;border-radius:6px;background:#080809;box-shadow:0 0 18px #ffc40018;isolation:isolate}
+.showcase-wall figure:after{z-index:2;background:linear-gradient(180deg,transparent 55%,#050506e8 100%)}
+.showcase-wall .wall-backdrop{filter:blur(28px) brightness(.25) saturate(1.15);transform:scale(1.1)}
+.showcase-wall .wall-main{object-fit:contain}
+.wall-meta{position:absolute;z-index:4;left:0;right:0;bottom:0;display:flex;align-items:flex-end;min-height:58px;padding:12px 16px;background:linear-gradient(transparent,#050506ee);text-transform:uppercase}
+.wall-meta b{display:block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:clamp(10px,.78vw,14px);letter-spacing:.025em}
+.wall-meta small{display:block;margin-top:3px;color:#ddd;font-size:clamp(8px,.58vw,11px);text-transform:none}
+.showcase-status{left:clamp(18px,2.8vw,48px);bottom:9px;padding:5px 0;border:0;background:transparent;backdrop-filter:none}.photo-count{font-size:clamp(10px,.8vw,14px)}.progress-track{width:min(32vw,350px);height:3px;background:#ffffff35}.progress-track i{background:#ffc400}
+.showcase-scene-label{right:clamp(18px,2.8vw,48px);bottom:8px;padding:7px 11px;border:1px solid #ffc40088;border-right:1px solid #ffc40088;background:#09090add;box-shadow:0 0 14px #ffc40032}.showcase-scene-label span{color:#fff}.showcase-scene-label b{color:#ffc400}
+@media(max-width:900px){.showcase-club-badge{width:82px;height:82px;top:8px}.showcase-wall{padding-top:105px}.wall-meta{min-height:46px;padding:8px 10px}}
+@media(max-width:620px){.showcase-club-badge{display:none}.showcase-overlay{height:82px;padding:8px}.showcase-heading .brand{font-size:18px}.showcase-wall{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr);padding:88px 6px 42px;gap:5px}.showcase-wall.count-3{grid-template-columns:1fr;grid-template-rows:repeat(3,1fr)}.showcase-wall.count-5,.showcase-wall.count-6{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr)}.wall-meta{min-height:38px;padding:5px 7px}.wall-meta small{display:none}}

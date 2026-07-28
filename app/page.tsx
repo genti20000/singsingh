@@ -52,7 +52,7 @@ return <main className="gallery-showcase">
   </div>
   <div className="showcase-overlay">
     <div className="showcase-heading"><Brand/><div><span>LIVE</span><h1>Wall of Fame</h1></div></div>
-    <img className="showcase-club-badge" src="/london-karaoke-club-badge.png" alt="The London Karaoke Club"/>
+    <img className="showcase-club-badge" src="/london-karaoke-club-badge.webp" alt="The London Karaoke Club"/>
     <a className="showcase-qr" href="/" aria-label="Upload your SingShot"><CustomerQR compact/><strong>SCAN · SNAP · BE THE NEXT STAR</strong></a>
   </div>
   {photos.length>0&&<div className={`showcase-scene-label ${phase==='individual'&&currentIndex===0?'is-newest':''}`}><span>{phase==='collage'?'TONIGHT’S STARS':currentIndex===0?'NEWEST STAR':'NOW ON STAGE'}</span><b>{phase==='collage'?`${photos.length} MOMENTS LIVE`:current?.caption||'SINGSHOT STAR'}</b></div>}

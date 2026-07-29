@@ -352,3 +352,165 @@
     filter:none!important;
   }
 }
+
+/* Gallery rotation enhancements: one timer drives photos, QR takeover and progress. */
+.showcase-photo{
+  transition:opacity .38s ease!important;
+}
+.showcase-photo.current.is-ready .showcase-main{
+  animation-duration:.42s,6.58s!important;
+  animation-delay:0s,.42s!important;
+}
+.showcase-photo.previous.fade-away{
+  animation-duration:.38s!important;
+}
+.showcase-photo .showcase-photo-caption{
+  position:absolute;
+  z-index:6;
+  left:50%;
+  bottom:calc(clamp(52px,6.2vh,68px) + 14px);
+  display:block!important;
+  max-width:min(72vw,920px);
+  margin:0;
+  padding:18px 24px 12px;
+  transform:translateX(-50%);
+  border:0;
+  background:linear-gradient(transparent,#070708e8 46%);
+  color:#fff;
+  font-size:clamp(15px,1.35vw,24px);
+  font-weight:800;
+  line-height:1.2;
+  text-align:center;
+  text-shadow:0 2px 12px #000;
+  box-shadow:none;
+}
+.showcase-new-badge{
+  position:absolute;
+  z-index:8;
+  top:calc(clamp(108px,13.5vh,146px) + 14px);
+  right:clamp(22px,3vw,52px);
+  padding:7px 12px;
+  border:1px solid #ffc400;
+  border-radius:999px;
+  background:#070708e8;
+  color:#ffc400;
+  font-size:clamp(10px,.75vw,13px);
+  font-weight:950;
+  letter-spacing:.18em;
+  box-shadow:0 0 20px #ffc40066;
+  animation:newBadgePulse 1.35s ease-in-out infinite;
+}
+.showcase-status-pill{
+  flex:0 1 auto;
+  overflow:hidden;
+  padding:7px 13px;
+  border:1px solid #ffc40088;
+  border-radius:999px;
+  background:#1a1320;
+  color:#ffc400;
+  font-size:clamp(10px,.76vw,13px);
+  font-weight:900;
+  letter-spacing:.06em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.showcase-status-pill.is-new{
+  background:#ffc400;
+  color:#10091c;
+  box-shadow:0 0 18px #ffc40055;
+}
+.showcase-footer-counter{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  min-width:min(44vw,520px);
+}
+.showcase-footer-progress{
+  width:min(28vw,320px);
+  height:3px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#ffffff30;
+}
+.showcase-footer-progress i{
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:inherit;
+  background:#ffc400;
+  box-shadow:0 0 12px #ffc400;
+  transform:scaleX(0);
+  transform-origin:left;
+  animation:showcaseProgress var(--scene-duration,7000ms) linear forwards;
+}
+.showcase-qr-takeover{
+  position:absolute;
+  z-index:20;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:clamp(24px,5vw,80px);
+  background:radial-gradient(circle at 50% 44%,#31163b 0,#0b0710 58%,#050506 100%);
+  animation:qrTakeoverIn .42s ease both;
+}
+.showcase-qr-takeover>a{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:min(90vw,760px);
+  padding:clamp(24px,4vw,54px);
+  border:1px solid #ffc40099;
+  border-radius:10px;
+  background:#0b0810ed;
+  color:#fff;
+  text-align:center;
+  text-decoration:none;
+  box-shadow:0 0 70px #ff3e9d30,0 0 38px #ffc40030;
+}
+.showcase-qr-takeover .customer-qr{
+  display:block;
+  min-width:0;
+  padding:12px;
+  border:3px solid #ffc400;
+  background:#fff9e9;
+  box-shadow:0 0 36px #ffc40055;
+}
+.showcase-qr-takeover .customer-qr img{
+  width:clamp(230px,28vw,360px);
+  height:clamp(230px,28vw,360px);
+}
+.showcase-qr-takeover .customer-qr>div{display:none}
+.showcase-qr-takeover h2{
+  margin:clamp(18px,3vh,30px) 0 8px;
+  color:#ffc400;
+  font-size:clamp(36px,5vw,82px);
+  line-height:.9;
+  letter-spacing:-.045em;
+}
+.showcase-qr-takeover strong{
+  font-size:clamp(16px,1.6vw,28px);
+  letter-spacing:.1em;
+}
+.showcase-qr-takeover p{
+  margin:10px 0 0;
+  color:#d8cfdf;
+  font-size:clamp(14px,1.1vw,20px);
+}
+@keyframes newBadgePulse{50%{transform:scale(1.08);box-shadow:0 0 30px #ff3e9d70,0 0 18px #ffc400}}
+@keyframes qrTakeoverIn{from{opacity:0;transform:scale(1.025)}to{opacity:1;transform:none}}
+@media(max-width:700px){
+  .showcase-footer-counter{min-width:42vw;gap:7px}
+  .showcase-footer-progress{width:19vw}
+  .showcase-status-pill{max-width:42vw;padding:6px 9px;font-size:9px}
+  .showcase-photo .showcase-photo-caption{bottom:66px;max-width:84vw;padding:15px 16px 10px;font-size:14px}
+  .showcase-new-badge{top:112px;right:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .showcase-photo,.showcase-photo.current.is-ready .showcase-main,.showcase-photo.previous.fade-away,.showcase-new-badge,.showcase-qr-takeover{
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+  }
+  .showcase-footer-progress i{animation:none!important;transform:scaleX(1)}
+}

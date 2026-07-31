@@ -533,3 +533,10 @@
   width:calc(100% - clamp(16px,2vw,32px));
   height:calc(100% - clamp(16px,2vw,32px));
 }
+.showcase-photo.is-portrait .showcase-backdrop{
+  opacity:.16;
+  filter:blur(52px) brightness(.18) saturate(.9);
+}
+.showcase-photo.is-portrait .showcase-main{
+  padding:clamp(8px,1.2vw,20px);
+}

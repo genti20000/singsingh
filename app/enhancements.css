@@ -514,3 +514,22 @@
   }
   .showcase-footer-progress i{animation:none!important;transform:scaleX(1)}
 }
+
+/* Keep every guest photo fully visible, regardless of its aspect ratio. */
+.showcase-photo .showcase-main,
+.showcase-wall .wall-main{
+  object-fit:contain!important;
+  object-position:center!important;
+}
+.showcase-photo .showcase-backdrop,
+.showcase-wall .wall-backdrop{
+  opacity:.38;
+}
+.showcase-wall.count-1 .wall-backdrop{
+  opacity:.22;
+}
+.showcase-wall.count-1 .wall-main{
+  inset:clamp(8px,1vw,16px);
+  width:calc(100% - clamp(16px,2vw,32px));
+  height:calc(100% - clamp(16px,2vw,32px));
+}

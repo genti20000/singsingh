@@ -540,3 +540,16 @@
 .showcase-photo.is-portrait .showcase-main{
   padding:clamp(8px,1.2vw,20px);
 }
+
+/* Safari viewport fallback and safe-area protection for full-screen flows. */
+body{min-height:100vh;min-height:100dvh}
+.gallery,.gallery-showcase{height:100vh;height:100dvh}
+.gallery-showcase{max-height:100vh;max-height:100dvh}
+.admin,.admin-login{min-height:100vh;min-height:100dvh}
+.landing,.flow,.success{min-height:calc(100vh - 86px);min-height:calc(100dvh - 86px)}
+.flow,.success,.admin-login{padding-bottom:max(24px,env(safe-area-inset-bottom,0px))}
+.top{padding-top:max(18px,env(safe-area-inset-top,0px))}
+@media(max-width:700px){
+  .landing,.flow,.success{min-height:calc(100vh - 72px);min-height:calc(100dvh - 72px)}
+  .top{padding-top:max(12px,env(safe-area-inset-top,0px))}
+}

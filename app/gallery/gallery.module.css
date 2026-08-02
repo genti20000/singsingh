@@ -1,10 +1,12 @@
 .display{
   --amber:#ffc400;
+  height:100vh;
   height:100dvh;
   min-height:480px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
   overflow:hidden;
   display:grid;
-  grid-template-rows:clamp(58px,7.4vh,76px) minmax(0,1fr);
+  grid-template-rows:calc(clamp(58px,7.4vh,76px) + env(safe-area-inset-top,0px)) minmax(0,1fr);
   background:#050505;
   color:#fff;
 }
@@ -16,7 +18,11 @@
   grid-template-columns:1fr auto 1fr;
   align-items:center;
   gap:24px;
-  padding:0 clamp(18px,3vw,52px);
+  padding:
+    env(safe-area-inset-top,0px)
+    max(clamp(18px,3vw,52px),env(safe-area-inset-right,0px))
+    0
+    max(clamp(18px,3vw,52px),env(safe-area-inset-left,0px));
   border-bottom:1px solid color-mix(in srgb,var(--amber) 48%,transparent);
   background:linear-gradient(180deg,#111 0,#090909 100%);
   box-shadow:0 12px 32px #000b;
@@ -213,8 +219,15 @@
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media(max-width:620px){
-  .display{grid-template-rows:58px minmax(0,1fr)}
-  .header{gap:8px;padding:0 10px}
+  .display{grid-template-rows:calc(58px + env(safe-area-inset-top,0px)) minmax(0,1fr)}
+  .header{
+    gap:8px;
+    padding:
+      env(safe-area-inset-top,0px)
+      max(10px,env(safe-area-inset-right,0px))
+      0
+      max(10px,env(safe-area-inset-left,0px));
+  }
   .identity{font-size:17px}
   .header h1{font-size:13px}
   .location{font-size:7px;letter-spacing:.08em}

@@ -1,0 +1,10 @@
+{
+  "name": "SingShot",
+  "description": "Take a selfie. Become part of the night. SingShot transforms guest photos into branded animated moments on venue screens.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

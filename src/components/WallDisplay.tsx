@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import QRCode from 'qrcode';
 import { Submission, Venue, QRShape } from '../types';
 import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
 import { BrandedCard } from './BrandedCard';
 import { ParticleCanvas } from './ParticleCanvas';
+import { DataService, subscribeToSync } from '../services/dataService';
+import { INITIAL_SUBMISSIONS } from '../data/initialData';
 import { Sparkles, Maximize2, Minimize2, Radio, Shapes, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -13,7 +15,9 @@ interface WallDisplayProps {
 }
 
 export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>(() => {
+    return INITIAL_SUBMISSIONS.filter((s) => s.status === 'approved');
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [featuredSub, setFeaturedSub] = useState<Submission | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
@@ -30,21 +34,13 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     const nextIdx = (shapeList.indexOf(qrShape) + 1) % shapeList.length;
     const nextShape = shapeList[nextIdx];
     setQrShape(nextShape);
-    fetch('/api/venue', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ qr_shape: nextShape }),
-    }).catch(() => {});
+    DataService.updateVenue({ qr_shape: nextShape });
   };
 
   const handleSelectShape = (shape: QRShape) => {
     setQrShape(shape);
     setShowShapePicker(false);
-    fetch('/api/venue', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ qr_shape: shape }),
-    }).catch(() => {});
+    DataService.updateVenue({ qr_shape: shape });
   };
 
   // 1. Generate QR Code for guest scanning
@@ -75,39 +71,45 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. Poll for approved submissions from backend
-  useEffect(() => {
-    const fetchApproved = async () => {
-      try {
-        const res = await fetch(`/api/submissions?status=approved`);
-        if (res.ok) {
-          const list: Submission[] = await res.json();
-          setSubmissions(list);
+  // 3. Load approved submissions using resilient DataService with live sync
+  const fetchApproved = useCallback(async () => {
+    try {
+      const list = await DataService.getSubmissions({ status: 'approved' });
+      if (list && list.length > 0) {
+        setSubmissions(list);
 
-          // Check for active featured takeover trigger
-          const featured = list.find((s) => s.featured);
-          if (featured && featured.id !== featuredSub?.id) {
-            setFeaturedSub(featured);
-            // Trigger celebratory confetti on spotlight takeover
-            confetti({
-              particleCount: 120,
-              spread: 90,
-              origin: { y: 0.5 },
-              colors: ['#e5b842', '#ffffff', '#f43f5e', '#38bdf8'],
-            });
-          } else if (!featured && featuredSub) {
-            setFeaturedSub(null);
-          }
+        // Check for active featured takeover trigger
+        const featured = list.find((s) => s.featured);
+        if (featured && featured.id !== featuredSub?.id) {
+          setFeaturedSub(featured);
+          // Trigger celebratory confetti on spotlight takeover
+          confetti({
+            particleCount: 120,
+            spread: 90,
+            origin: { y: 0.5 },
+            colors: ['#e5b842', '#ffffff', '#f43f5e', '#38bdf8'],
+          });
+        } else if (!featured && featuredSub) {
+          setFeaturedSub(null);
         }
-      } catch (err) {
-        console.error('Failed to fetch wall submissions:', err);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch wall submissions:', err);
+    }
+  }, [featuredSub]);
 
+  useEffect(() => {
     fetchApproved();
-    const pollInterval = setInterval(fetchApproved, 2000);
-    return () => clearInterval(pollInterval);
-  }, [featuredSub?.id]);
+    const pollInterval = setInterval(fetchApproved, 3000);
+    const unsubscribe = subscribeToSync(() => {
+      fetchApproved();
+    });
+
+    return () => {
+      clearInterval(pollInterval);
+      unsubscribe();
+    };
+  }, [fetchApproved]);
 
   // 4. Auto Rotate Cards every 6 seconds if not in featured spotlight mode
   useEffect(() => {

@@ -120,10 +120,18 @@ export const BrandedCard: React.FC<BrandedCardProps> = ({
       </div>
 
       {/* Central Portrait Photo Container */}
-      <div className="relative z-20 my-2 flex-1 overflow-hidden rounded-xl border border-white/15 bg-black/50 shadow-inner group">
+      <div className="relative z-20 my-2 flex-1 overflow-hidden rounded-xl border border-white/15 bg-zinc-950 shadow-inner group">
         <img
           src={image_url}
           alt={`${first_name}'s SingShot`}
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            // If primary URL fails to load on certain hosts/CDNs, switch to robust fallback
+            const target = e.currentTarget;
+            if (!target.src.includes('photo-1534528741775')) {
+              target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+            }
+          }}
           className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
         />
 

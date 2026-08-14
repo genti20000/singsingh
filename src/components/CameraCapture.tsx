@@ -318,6 +318,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               <img
                 src={displayImage}
                 alt="Captured Selfie"
+                referrerPolicy="no-referrer"
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />

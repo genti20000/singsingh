@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Submission, EventSession, Reward, Venue, QRShape } from '../types';
 import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
+import { DataService, subscribeToSync } from '../services/dataService';
+import { INITIAL_SUBMISSIONS, INITIAL_EVENTS, INITIAL_REWARDS } from '../data/initialData';
 import {
   Check,
   X,
@@ -26,9 +28,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   venue,
   onUpdateVenue,
 }) => {
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [events, setEvents] = useState<EventSession[]>([]);
-  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>(() => INITIAL_SUBMISSIONS);
+  const [events, setEvents] = useState<EventSession[]>(() => INITIAL_EVENTS);
+  const [rewards, setRewards] = useState<Reward[]>(() => INITIAL_REWARDS);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'all'>('pending');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -47,43 +49,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [qrShape, setQrShape] = useState<QRShape>(venue.qr_shape || 'squircle');
 
   // Fetch initial data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const [subRes, evtRes, rewRes] = await Promise.all([
-        fetch('/api/submissions'),
-        fetch('/api/events'),
-        fetch('/api/rewards'),
+      const [subsList, eventsList, rewardsList] = await Promise.all([
+        DataService.getSubmissions(),
+        DataService.getEvents(),
+        DataService.getRewards(),
       ]);
 
-      if (subRes.ok) setSubmissions(await subRes.json());
-      if (evtRes.ok) setEvents(await evtRes.json());
-      if (rewRes.ok) setRewards(await rewRes.json());
+      if (subsList) setSubmissions(subsList);
+      if (eventsList) setEvents(eventsList);
+      if (rewardsList) setRewards(rewardsList);
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
-      setTimeout(() => setIsRefreshing(false), 400);
+      setTimeout(() => setIsRefreshing(false), 300);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    const unsubscribe = subscribeToSync(() => {
+      fetchData();
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
+  }, [fetchData]);
 
   // Staff Moderation Actions
   const handleApprove = async (id: string) => {
     try {
-      const res = await fetch(`/api/submissions/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'approved' }),
-      });
-      if (res.ok) {
-        confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
-        fetchData();
-      }
+      await DataService.updateSubmission(id, { status: 'approved' });
+      confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
+      fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -91,11 +94,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleReject = async (id: string) => {
     try {
-      await fetch(`/api/submissions/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'rejected' }),
-      });
+      await DataService.updateSubmission(id, { status: 'rejected' });
       fetchData();
     } catch (err) {
       console.error(err);
@@ -104,9 +103,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleFeatureNow = async (id: string) => {
     try {
-      await fetch(`/api/submissions/${id}/feature`, {
-        method: 'POST',
-      });
+      await DataService.featureSubmission(id);
       confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
       fetchData();
     } catch (err) {
@@ -116,10 +113,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleAttachReward = async (submissionId: string, rewardId: string) => {
     try {
-      await fetch(`/api/submissions/${submissionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reward_id: rewardId }),
+      const selectedReward = rewards.find((r) => r.id === rewardId) || null;
+      await DataService.updateSubmission(submissionId, {
+        reward: selectedReward,
       });
       setShowRewardModal(null);
       fetchData();
@@ -130,7 +126,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/submissions/${id}`, { method: 'DELETE' });
+      await DataService.deleteSubmission(id);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -142,21 +138,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!newEventTitle) return;
 
     try {
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newEventTitle,
-          custom_notice: newEventNotice,
-          active: true,
-        }),
+      await DataService.createEvent({
+        title: newEventTitle,
+        custom_notice: newEventNotice,
       });
-      if (res.ok) {
-        setNewEventTitle('');
-        setNewEventNotice('');
-        setShowEventModal(false);
-        fetchData();
-      }
+      setNewEventTitle('');
+      setNewEventNotice('');
+      setShowEventModal(false);
+      fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -166,11 +155,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     e.preventDefault();
     const updated = { wall_ticker_text: tickerText, auto_approve: autoApprove, qr_shape: qrShape };
     try {
-      await fetch('/api/venue', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updated),
-      });
+      await DataService.updateVenue(updated);
       onUpdateVenue(updated);
       setShowSettingsModal(false);
     } catch (err) {
@@ -338,6 +323,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <img
                     src={item.image_url}
                     alt={item.first_name}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes('photo-1507003211169')) {
+                        target.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80';
+                      }
+                    }}
                     className="h-full w-full object-cover"
                   />
                   {item.featured && (

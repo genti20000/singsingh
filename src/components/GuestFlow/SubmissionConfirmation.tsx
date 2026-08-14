@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Submission, Venue } from '../../types';
 import { BrandedCard } from '../BrandedCard';
+import { DataService, subscribeToSync } from '../../services/dataService';
 import { CheckCircle2, Clock, Sparkles, RefreshCw, Gift, Share2, Copy, Check, MessageCircle, ExternalLink, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -66,22 +67,19 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const res = await fetch(`/api/submissions?event_id=${submission.event_id}`);
-        if (res.ok) {
-          const list: Submission[] = await res.json();
-          const updated = list.find((s) => s.id === submission.id);
-          if (updated) {
-            if (updated.status === 'approved' && submission.status !== 'approved') {
-              // Trigger celebratory confetti on approval!
-              confetti({
-                particleCount: 80,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#e5b842', '#ffffff', '#f59e0b'],
-              });
-            }
-            setSubmission(updated);
+        const list = await DataService.getSubmissions({ event_id: submission.event_id });
+        const updated = list.find((s) => s.id === submission.id);
+        if (updated) {
+          if (updated.status === 'approved' && submission.status !== 'approved') {
+            // Trigger celebratory confetti on approval!
+            confetti({
+              particleCount: 80,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ['#e5b842', '#ffffff', '#f59e0b'],
+            });
           }
+          setSubmission(updated);
         }
       } catch (err) {
         console.error('Failed to poll status:', err);
@@ -89,18 +87,28 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
     };
 
     const interval = setInterval(checkStatus, 3000);
-    return () => clearInterval(interval);
+    const unsubscribe = subscribeToSync((event) => {
+      if (event.type === 'SUBMISSION_UPDATED' && (event.data as Submission)?.id === submission.id) {
+        const updated = event.data as Submission;
+        if (updated.status === 'approved' && submission.status !== 'approved') {
+          confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+        }
+        setSubmission(updated);
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, [submission.id, submission.status, submission.event_id]);
 
   const handleManualRefresh = async () => {
     setIsChecking(true);
     try {
-      const res = await fetch(`/api/submissions?event_id=${submission.event_id}`);
-      if (res.ok) {
-        const list: Submission[] = await res.json();
-        const updated = list.find((s) => s.id === submission.id);
-        if (updated) setSubmission(updated);
-      }
+      const list = await DataService.getSubmissions({ event_id: submission.event_id });
+      const updated = list.find((s) => s.id === submission.id);
+      if (updated) setSubmission(updated);
     } finally {
       setTimeout(() => setIsChecking(false), 500);
     }

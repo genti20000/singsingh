@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Venue, OccasionDetails, Submission, FrameStyleId } from './types';
 import { INITIAL_VENUE } from './data/initialData';
+import { DataService, subscribeToSync } from './services/dataService';
 import { GuestLanding } from './components/GuestFlow/GuestLanding';
 import { MomentSelector } from './components/GuestFlow/MomentSelector';
 import { GuestDetailsStep } from './components/GuestFlow/GuestDetailsStep';
@@ -32,14 +33,19 @@ export default function App() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch venue configuration from backend
+  // Fetch venue configuration using resilient DataService
   useEffect(() => {
-    fetch('/api/venue')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setVenue(data);
-      })
-      .catch((err) => console.error('Failed to load venue config:', err));
+    DataService.getVenue().then((data) => {
+      if (data) setVenue(data);
+    });
+
+    const unsubscribe = subscribeToSync((event) => {
+      if (event.type === 'VENUE_UPDATED' && event.data) {
+        setVenue(event.data as Venue);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Listen for popstate / browser URL changes
@@ -82,22 +88,17 @@ export default function App() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: firstName,
-          caption,
-          image_url: guestImage,
-          original_image_url: guestOriginalImage || guestImage,
-          frame_style: guestFrameStyle,
-          occasion: { ...guestOccasion, frame_style: guestFrameStyle },
-          event_id: venue.active_event_id,
-        }),
+      const newSub = await DataService.createSubmission({
+        first_name: firstName,
+        caption,
+        image_url: guestImage,
+        original_image_url: guestOriginalImage || guestImage,
+        frame_style: guestFrameStyle,
+        occasion: { ...guestOccasion, frame_style: guestFrameStyle },
+        event_id: venue.active_event_id,
       });
 
-      if (res.ok) {
-        const newSub: Submission = await res.json();
+      if (newSub) {
         setSubmittedRecord(newSub);
         setGuestStep('confirmation');
       }

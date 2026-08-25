@@ -6,7 +6,6 @@ import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
 import { BrandedCard } from './BrandedCard';
 import { ParticleCanvas } from './ParticleCanvas';
 import { DataService, subscribeToSync } from '../services/dataService';
-import { INITIAL_SUBMISSIONS } from '../data/initialData';
 import { Sparkles, Maximize2, Minimize2, Radio, Shapes, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -15,9 +14,7 @@ interface WallDisplayProps {
 }
 
 export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
-  const [submissions, setSubmissions] = useState<Submission[]>(() => {
-    return INITIAL_SUBMISSIONS.filter((s) => s.status === 'approved');
-  });
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [featuredSub, setFeaturedSub] = useState<Submission | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
@@ -75,23 +72,21 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
   const fetchApproved = useCallback(async () => {
     try {
       const list = await DataService.getSubmissions({ status: 'approved' });
-      if (list && list.length > 0) {
-        setSubmissions(list);
+      setSubmissions(list || []);
 
-        // Check for active featured takeover trigger
-        const featured = list.find((s) => s.featured);
-        if (featured && featured.id !== featuredSub?.id) {
-          setFeaturedSub(featured);
-          // Trigger celebratory confetti on spotlight takeover
-          confetti({
-            particleCount: 120,
-            spread: 90,
-            origin: { y: 0.5 },
-            colors: ['#e5b842', '#ffffff', '#f43f5e', '#38bdf8'],
-          });
-        } else if (!featured && featuredSub) {
-          setFeaturedSub(null);
-        }
+      // Check for active featured takeover trigger
+      const featured = list.find((s) => s.featured);
+      if (featured && featured.id !== featuredSub?.id) {
+        setFeaturedSub(featured);
+        // Trigger celebratory confetti on spotlight takeover
+        confetti({
+          particleCount: 120,
+          spread: 90,
+          origin: { y: 0.5 },
+          colors: ['#e5b842', '#ffffff', '#f43f5e', '#38bdf8'],
+        });
+      } else if (!featured && featuredSub) {
+        setFeaturedSub(null);
       }
     } catch (err) {
       console.error('Failed to fetch wall submissions:', err);
@@ -133,14 +128,14 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
   const activeSubmission = submissions[currentIndex] || null;
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#050505] text-white flex flex-col justify-between select-none">
+    <div className="singshot-wall relative h-screen w-screen overflow-hidden bg-[#050505] text-white flex flex-col justify-between select-none">
       {/* Background Nightlife Ambient Particle Canvas */}
       <ParticleCanvas color="#e5b842" density={70} speed={0.9} />
 
       {/* Top Header Bar */}
-      <header className="relative z-30 flex items-center justify-between px-8 py-4 bg-gradient-to-b from-black/90 via-black/60 to-transparent border-b border-white/10">
+      <header className="wall-header relative z-30 flex items-center justify-between px-8 py-4 bg-gradient-to-b from-black/90 via-black/60 to-transparent border-b border-white/10">
         {/* Left: Venue Branding */}
-        <div className="flex items-center gap-4">
+        <div className="wall-brand-block flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#e5b842] via-yellow-300 to-amber-500 text-black font-extrabold text-xl shadow-[0_0_25px_rgba(229,184,66,0.5)]">
             SS
           </div>
@@ -160,7 +155,7 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
         </div>
 
         {/* Center: Headline */}
-        <div className="hidden md:flex flex-col items-center">
+        <div className="wall-center-title hidden md:flex flex-col items-center">
           <span className="text-xs font-black tracking-[0.3em] text-[#e5b842] uppercase">
             LIVE WALL OF FAME
           </span>
@@ -170,8 +165,8 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
         </div>
 
         {/* Right: High-Contrast Scan QR Widget & Controls */}
-        <div className="flex items-center gap-4 relative">
-          <div className={`relative flex items-center gap-3 bg-zinc-950/90 ${shapeConfig.containerClassName} p-2 pr-4 shadow-[0_0_30px_rgba(229,184,66,0.3)] transition-all duration-300`}>
+        <div className="wall-actions flex items-center gap-4 relative">
+          <div className={`wall-qr-widget relative flex items-center gap-3 bg-zinc-950/90 ${shapeConfig.containerClassName} p-2 pr-4 shadow-[0_0_30px_rgba(229,184,66,0.3)] transition-all duration-300`}>
             {qrCodeDataUrl ? (
               <img
                 src={qrCodeDataUrl}
@@ -256,9 +251,9 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
       </header>
 
       {/* Main Content Showcase Stage */}
-      <main className="relative z-20 flex-1 flex flex-col items-center justify-between p-3 sm:p-6 overflow-hidden">
+      <main className="wall-main relative z-20 flex-1 flex flex-col items-center justify-between p-3 sm:p-6 overflow-hidden">
         {/* Main Central Showcase Card */}
-        <div className="flex-1 flex items-center justify-center w-full max-w-5xl py-2">
+        <div className="wall-stage flex-1 flex items-center justify-center w-full max-w-5xl py-2">
           <AnimatePresence mode="wait">
             {/* FEATURED SPOTLIGHT TAKEOVER MODE */}
             {featuredSub ? (
@@ -313,7 +308,7 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
 
         {/* BOTTOM GALLERY FILMSTRIP — Show Other Guest Photos */}
         {submissions.length > 0 && (
-          <div className="relative z-30 w-full max-w-7xl mt-2 pt-3 border-t border-white/10 bg-black/60 backdrop-blur-md rounded-2xl px-4 py-2.5">
+          <div className="wall-filmstrip relative z-30 w-full max-w-7xl mt-2 pt-3 border-t border-white/10 bg-black/60 backdrop-blur-md rounded-2xl px-4 py-2.5">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 text-xs font-black tracking-widest text-[#e5b842] uppercase">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
@@ -376,7 +371,7 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
       </main>
 
       {/* Bottom Offer / Ticker Banner */}
-      <footer className="relative z-30 bg-gradient-to-r from-[#14120c] via-black to-[#14120c] border-t-2 border-[#e5b842]/50 py-3 px-6 overflow-hidden">
+      <footer className="wall-ticker relative z-30 bg-gradient-to-r from-[#14120c] via-black to-[#14120c] border-t-2 border-[#e5b842]/50 py-3 px-6 overflow-hidden">
         <div className="whitespace-nowrap flex items-center gap-8 animate-[marquee_25s_linear_infinite] text-sm md:text-base font-extrabold text-[#e5b842] tracking-wider uppercase">
           <span>{venue.wall_ticker_text}</span>
           <span>•</span>

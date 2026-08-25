@@ -24,9 +24,9 @@ export const BrandedCard: React.FC<BrandedCardProps> = ({
   // Size specific styling
   const sizeClasses = {
     thumb: 'w-44 h-60 text-xs',
-    normal: 'w-full max-w-sm h-[520px] text-sm',
-    large: 'w-full max-w-lg h-[620px] sm:h-[660px] text-base',
-    hero: 'w-full max-w-3xl h-[680px] sm:h-[740px] text-lg',
+    normal: 'branded-card-normal w-full max-w-sm h-[520px] text-sm',
+    large: 'branded-card-large w-full max-w-lg h-[620px] sm:h-[660px] text-base',
+    hero: 'branded-card-hero w-full max-w-3xl h-[680px] sm:h-[740px] text-lg',
   }[size];
 
   // Frame theme configurations

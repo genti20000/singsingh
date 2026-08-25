@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Submission, EventSession, Reward, Venue, QRShape } from '../types';
 import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
 import { DataService, subscribeToSync } from '../services/dataService';
-import { INITIAL_SUBMISSIONS, INITIAL_EVENTS, INITIAL_REWARDS } from '../data/initialData';
+import { INITIAL_EVENTS, INITIAL_REWARDS } from '../data/initialData';
 import {
   Check,
   X,
@@ -28,7 +28,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   venue,
   onUpdateVenue,
 }) => {
-  const [submissions, setSubmissions] = useState<Submission[]>(() => INITIAL_SUBMISSIONS);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [events, setEvents] = useState<EventSession[]>(() => INITIAL_EVENTS);
   const [rewards, setRewards] = useState<Reward[]>(() => INITIAL_REWARDS);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'all'>('pending');

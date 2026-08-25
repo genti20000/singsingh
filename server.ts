@@ -1,14 +1,14 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { INITIAL_VENUE, INITIAL_EVENTS, INITIAL_REWARDS, INITIAL_SUBMISSIONS } from './src/data/initialData';
+import { INITIAL_VENUE, INITIAL_EVENTS, INITIAL_REWARDS } from './src/data/initialData';
 import { Venue, EventSession, Reward, Submission, SubmissionStatus } from './src/types';
 
 // In-Memory Database Store (persists for runtime lifecycle)
 let venueStore: Venue = { ...INITIAL_VENUE };
 let eventsStore: EventSession[] = [...INITIAL_EVENTS];
 let rewardsStore: Reward[] = [...INITIAL_REWARDS];
-let submissionsStore: Submission[] = [...INITIAL_SUBMISSIONS];
+let submissionsStore: Submission[] = [];
 
 async function startServer() {
   const app = express();

@@ -1,5 +1,5 @@
 import { Venue, EventSession, Reward, Submission, QRShape } from '../types';
-import { INITIAL_VENUE, INITIAL_EVENTS, INITIAL_REWARDS, INITIAL_SUBMISSIONS } from '../data/initialData';
+import { INITIAL_VENUE, INITIAL_EVENTS, INITIAL_REWARDS } from '../data/initialData';
 
 // Fallback high-res nightlife photo placeholders in case of CDN failures
 export const FALLBACK_IMAGES = [
@@ -82,7 +82,8 @@ function setLocal<T>(key: string, value: T): void {
   }
 }
 
-// Seed initial data if empty
+// Seed stable venue setup data if empty. Submissions are intentionally not seeded:
+// an empty queue must stay empty, especially after admin clears it.
 export function initLocalDatabase(): void {
   if (typeof window === 'undefined') return;
   if (!localStorage.getItem(STORAGE_KEYS.VENUE)) {
@@ -95,7 +96,7 @@ export function initLocalDatabase(): void {
     setLocal(STORAGE_KEYS.REWARDS, INITIAL_REWARDS);
   }
   if (!localStorage.getItem(STORAGE_KEYS.SUBMISSIONS)) {
-    setLocal(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
+    setLocal(STORAGE_KEYS.SUBMISSIONS, []);
   }
 }
 
@@ -158,8 +159,8 @@ export const DataService = {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          // Sync with local
+        if (Array.isArray(data)) {
+          // Sync with local, including an empty authoritative queue
           setLocal(STORAGE_KEYS.SUBMISSIONS, data);
           return data;
         }
@@ -168,14 +169,8 @@ export const DataService = {
       // API unavailable on Vercel static
     }
 
-    // Fallback to local storage (which is always seeded with INITIAL_SUBMISSIONS)
-    list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
-
-    // If local was somehow wiped or empty, reseed with INITIAL_SUBMISSIONS
-    if (!list || list.length === 0) {
-      list = [...INITIAL_SUBMISSIONS];
-      setLocal(STORAGE_KEYS.SUBMISSIONS, list);
-    }
+    // Fallback to local storage without reseeding demo submissions.
+    list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, []);
 
     if (filters?.event_id) {
       list = list.filter((s) => s.event_id === filters.event_id);
@@ -215,7 +210,7 @@ export const DataService = {
     };
 
     // Save locally first
-    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
+    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, []);
     const updatedList = [newSubmission, ...list];
     setLocal(STORAGE_KEYS.SUBMISSIONS, updatedList);
     broadcastSync('SUBMISSION_CREATED', newSubmission);
@@ -243,7 +238,7 @@ export const DataService = {
 
   // 5. Update Submission (Status, Reward, etc.)
   async updateSubmission(id: string, patch: Partial<Submission>): Promise<Submission | null> {
-    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
+    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, []);
     let updatedItem: Submission | null = null;
 
     const updatedList = list.map((item) => {
@@ -278,7 +273,7 @@ export const DataService = {
 
   // 6. Feature Submission Spotlight
   async featureSubmission(id: string): Promise<Submission | null> {
-    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
+    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, []);
     let featuredItem: Submission | null = null;
 
     const updatedList = list.map((item) => {
@@ -312,7 +307,7 @@ export const DataService = {
 
   // 7. Delete Submission
   async deleteSubmission(id: string): Promise<boolean> {
-    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
+    const list = getLocal<Submission[]>(STORAGE_KEYS.SUBMISSIONS, []);
     const updatedList = list.filter((s) => s.id !== id);
     setLocal(STORAGE_KEYS.SUBMISSIONS, updatedList);
     broadcastSync('SUBMISSION_DELETED', { id });

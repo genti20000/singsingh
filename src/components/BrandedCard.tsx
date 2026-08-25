@@ -8,8 +8,9 @@ import { Crown, Sparkles, PartyPopper, Heart, Building2, Gift } from 'lucide-rea
 interface BrandedCardProps {
   submission: Submission;
   venue?: Venue;
-  size?: 'thumb' | 'normal' | 'large' | 'hero';
+  size?: 'thumb' | 'sm' | 'md' | 'normal' | 'large' | 'hero';
   showReward?: boolean;
+  animated?: boolean;
 }
 
 export const BrandedCard: React.FC<BrandedCardProps> = ({
@@ -17,16 +18,19 @@ export const BrandedCard: React.FC<BrandedCardProps> = ({
   venue,
   size = 'normal',
   showReward = true,
+  animated = true,
 }) => {
   const { occasion, first_name, caption, image_url, reward } = submission;
-  const occasionType = occasion.type || 'star';
+  const occasionType = occasion?.type || 'star';
 
   // Size specific styling
   const sizeClasses = {
     thumb: 'w-44 h-60 text-xs',
-    normal: 'branded-card-normal w-full max-w-sm h-[520px] text-sm',
-    large: 'branded-card-large w-full max-w-lg h-[620px] sm:h-[660px] text-base',
-    hero: 'branded-card-hero w-full max-w-3xl h-[680px] sm:h-[740px] text-lg',
+    sm: 'w-full max-w-[320px] h-[260px] sm:h-[290px] text-xs p-3',
+    md: 'w-full max-w-md h-[340px] sm:h-[380px] text-xs sm:text-sm p-3.5',
+    normal: 'branded-card-normal w-full max-w-sm h-[520px] text-sm p-4 sm:p-5',
+    large: 'branded-card-large w-full max-w-lg h-[620px] sm:h-[660px] text-base p-4 sm:p-5',
+    hero: 'branded-card-hero w-full max-w-3xl h-[680px] sm:h-[740px] text-lg p-4 sm:p-5',
   }[size];
 
   // Frame theme configurations

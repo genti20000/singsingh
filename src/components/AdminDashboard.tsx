@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Submission, EventSession, Reward, Venue, QRShape } from '../types';
 import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
 import { DataService, subscribeToSync } from '../services/dataService';
@@ -16,6 +16,8 @@ import {
   Tv,
   CheckCircle2,
   Shapes,
+  Radio,
+  BellRing,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -33,6 +35,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [rewards, setRewards] = useState<Reward[]>(() => INITIAL_REWARDS);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'all'>('pending');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
+  const [newSubmissionsAlert, setNewSubmissionsAlert] = useState<string | null>(null);
+  const prevCountRef = useRef<number>(0);
 
   // Modal states
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -48,9 +53,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [autoApprove, setAutoApprove] = useState(!!venue.auto_approve);
   const [qrShape, setQrShape] = useState<QRShape>(venue.qr_shape || 'squircle');
 
-  // Fetch initial data
-  const fetchData = useCallback(async () => {
-    setIsRefreshing(true);
+  // Fetch initial data with silent background update support
+  const fetchData = useCallback(async (isManual = false) => {
+    if (isManual) setIsRefreshing(true);
     try {
       const [subsList, eventsList, rewardsList] = await Promise.all([
         DataService.getSubmissions(),
@@ -58,21 +63,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         DataService.getRewards(),
       ]);
 
-      if (subsList) setSubmissions(subsList);
+      if (subsList) {
+        // Detect newly arrived submissions for quick staff alert
+        const currentPendingCount = subsList.filter((s) => s.status === 'pending').length;
+        if (prevCountRef.current > 0 && currentPendingCount > prevCountRef.current) {
+          const newest = subsList[0];
+          setNewSubmissionsAlert(`New photo submitted by ${newest?.first_name || 'Guest'}!`);
+          setTimeout(() => setNewSubmissionsAlert(null), 4000);
+        }
+        prevCountRef.current = currentPendingCount;
+        setSubmissions(subsList);
+      }
       if (eventsList) setEvents(eventsList);
       if (rewardsList) setRewards(rewardsList);
+      setLastSyncTime(new Date());
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
-      setTimeout(() => setIsRefreshing(false), 300);
+      if (isManual) {
+        setTimeout(() => setIsRefreshing(false), 300);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 3000);
-    const unsubscribe = subscribeToSync(() => {
-      fetchData();
+    fetchData(true);
+
+    // 1. High-frequency polling (every 2.5s) to guarantee automatic refresh without reload
+    const interval = setInterval(() => {
+      fetchData(false);
+    }, 2500);
+
+    // 2. Realtime Event-based subscription (BroadcastChannel + CustomEvents + StorageEvents)
+    const unsubscribe = subscribeToSync((event) => {
+      if (
+        event.type === 'SUBMISSION_CREATED' ||
+        event.type === 'SUBMISSION_UPDATED' ||
+        event.type === 'SUBMISSION_DELETED' ||
+        event.type === 'NEW_PHOTO_APPROVED' ||
+        event.type === 'STORAGE_CHANGE'
+      ) {
+        fetchData(false);
+      }
     });
 
     return () => {
@@ -184,7 +216,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span className="font-extrabold text-[#e5b842] text-sm uppercase tracking-widest bg-[#e5b842]/10 px-3 py-1 rounded-full border border-[#e5b842]/30">
                 Staff Dashboard
               </span>
-              <span className="text-xs text-zinc-400">London Karaoke Club</span>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>Live Auto-Sync</span>
+              </span>
             </div>
             <h1 className="font-serif text-2xl sm:text-3xl font-bold mt-1 text-white">
               Moderation Queue
@@ -290,15 +325,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           </div>
 
-          <button
-            onClick={fetchData}
-            disabled={isRefreshing}
-            className="p-2.5 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white transition-colors"
-            title="Refresh List"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#e5b842]' : ''}`} />
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline text-[11px] text-zinc-500 font-medium">
+              Auto-refreshing every 2.5s • Last sync: {lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+            <button
+              onClick={() => fetchData(true)}
+              disabled={isRefreshing}
+              className="p-2.5 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              title="Manual Refresh"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#e5b842]' : ''}`} />
+            </button>
+          </div>
         </div>
+
+        {/* Live Toast Banner for New Submissions */}
+        {newSubmissionsAlert && (
+          <div className="flex items-center justify-between gap-3 bg-[#e5b842] text-black font-extrabold text-xs px-4 py-3 rounded-2xl shadow-xl shadow-[#e5b842]/20 animate-fade-slide-up">
+            <div className="flex items-center gap-2">
+              <BellRing className="w-4 h-4 animate-bounce" />
+              <span>{newSubmissionsAlert}</span>
+            </div>
+            <button
+              onClick={() => setActiveTab('pending')}
+              className="bg-black text-white px-3 py-1 rounded-xl text-[11px] font-bold hover:bg-zinc-800 transition-colors"
+            >
+              View Pending
+            </button>
+          </div>
+        )}
 
         {/* Submissions List Grid */}
         {displayedList.length === 0 ? (

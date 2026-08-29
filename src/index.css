@@ -69,6 +69,80 @@ body {
   height: 100vh;
   height: 100dvh;
   min-height: 480px;
+  overflow: hidden;
+}
+
+.spotlight-stage {
+  height: calc(100vh - 64px - 100px - 28px);
+  height: calc(100dvh - 64px - 100px - 28px);
+  display: grid;
+  place-items: center;
+  padding: 6px 2vw;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.spotlight-photo-wrap {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  max-width: 94vw;
+  display: grid;
+  place-items: center;
+}
+
+.spotlight-backdrop {
+  position: absolute;
+  inset: -30px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(36px) brightness(0.22);
+  transform: scale(1.12);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.spotlight-photo {
+  height: 100%;
+  width: auto;
+  max-width: 92vw;
+  object-fit: contain;
+  border-radius: 26px;
+  box-shadow:
+    0 0 0 2px rgba(244, 193, 61, 0.75),
+    0 0 40px rgba(244, 193, 61, 0.28),
+    0 24px 80px rgba(0, 0, 0, 0.7);
+  position: relative;
+  z-index: 1;
+}
+
+.photo-nameplate {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 24px;
+  background: rgba(8, 8, 8, 0.8);
+  border: 1px solid rgba(244, 193, 61, 0.6);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #f4c13d;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 15px;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(244, 193, 61, 0.3);
+}
+
+.badge-vip {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
 }
 
 .branded-card-normal {

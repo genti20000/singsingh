@@ -63,6 +63,40 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
     .filter(Boolean)
     .join('\n\n');
 
+  // Trigger celebratory confetti when submission confirmation screen mounts
+  useEffect(() => {
+    // Stage 1: Central gold shower
+    confetti({
+      particleCount: 70,
+      spread: 60,
+      origin: { y: 0.65 },
+      colors: ['#e5b842', '#f59e0b', '#ffffff', '#fbbf24', '#f43f5e'],
+      disableForReducedMotion: true,
+    });
+
+    // Stage 2: Left and right celebratory cannons
+    const timer1 = setTimeout(() => {
+      confetti({
+        particleCount: 45,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.7 },
+        colors: ['#e5b842', '#ffffff', '#38bdf8', '#a855f7'],
+        disableForReducedMotion: true,
+      });
+      confetti({
+        particleCount: 45,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.7 },
+        colors: ['#e5b842', '#ffffff', '#38bdf8', '#a855f7'],
+        disableForReducedMotion: true,
+      });
+    }, 200);
+
+    return () => clearTimeout(timer1);
+  }, []);
+
   // Poll for moderation status change
   useEffect(() => {
     const checkStatus = async () => {

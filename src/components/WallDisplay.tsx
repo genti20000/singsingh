@@ -256,10 +256,10 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
                 alt={`Scan QR Code (${shapeConfig.name})`}
                 onClick={handleCycleShape}
                 title="Click QR code to switch shape"
-                className={`h-11 w-11 sm:h-12 sm:w-12 cursor-pointer hover:scale-105 ${shapeConfig.imgClassName}`}
+                className={`w-[65px] h-[65px] cursor-pointer hover:scale-105 ${shapeConfig.imgClassName}`}
               />
             ) : (
-              <div className="h-11 w-11 rounded-lg bg-[#e5b842]" />
+              <div className="w-[65px] h-[65px] rounded-lg bg-[#e5b842]" />
             )}
             <div className="text-left">
               <div className="flex items-center gap-1.5">

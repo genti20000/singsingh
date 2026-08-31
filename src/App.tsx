@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { Venue, OccasionDetails, Submission, FrameStyleId } from './types';
 import { INITIAL_VENUE } from './data/initialData';
 import { DataService, subscribeToSync } from './services/dataService';
@@ -11,7 +12,7 @@ import { WallDisplay } from './components/WallDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
 import { CommercialVenueSection } from './components/CommercialVenueSection';
 import { LondonKaraokeLogo } from './components/LondonKaraokeLogo';
-import { Camera, Tv, ShieldCheck, Sparkles, Building2 } from 'lucide-react';
+import { QrCode, Sparkles } from 'lucide-react';
 
 export default function App() {
   // Determine view based on URL pathname
@@ -23,6 +24,7 @@ export default function App() {
   });
 
   const [venue, setVenue] = useState<Venue>(INITIAL_VENUE);
+  const [headerQrUrl, setHeaderQrUrl] = useState<string>('');
 
   // Guest flow state
   const [guestStep, setGuestStep] = useState<'landing' | 'moment' | 'details' | 'confirmation'>('landing');
@@ -33,6 +35,21 @@ export default function App() {
   const [submittedRecord, setSubmittedRecord] = useState<Submission | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Generate QR Code for top-right header
+  useEffect(() => {
+    const appUrl = window.location.origin;
+    QRCode.toDataURL(appUrl, {
+      margin: 1,
+      width: 280,
+      color: {
+        dark: '#000000',
+        light: '#e5b842',
+      },
+    })
+      .then((url) => setHeaderQrUrl(url))
+      .catch((err) => console.error('Failed to generate header QR code:', err));
+  }, []);
 
   // Fetch venue configuration using resilient DataService
   useEffect(() => {
@@ -147,56 +164,44 @@ export default function App() {
             </div>
           </button>
 
-          {/* Navigation Mode Switcher */}
-          <nav className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-2xl border border-white/10 text-xs">
-            <button
-              onClick={() => navigateToView('guest')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
-                currentView === 'guest'
-                  ? 'bg-[#e5b842] text-black shadow-md'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Take Selfie</span>
-            </button>
+          {/* Top-Right Prominent QR Code */}
+          <div className="flex items-center gap-3 bg-zinc-900/90 border-2 border-[#e5b842]/70 ring-1 ring-[#e5b842]/30 p-2 sm:p-2.5 pr-3.5 rounded-2xl shadow-[0_0_25px_rgba(229,184,66,0.35)] backdrop-blur-xl">
+            <div className="relative shrink-0">
+              <div className="absolute -inset-1 rounded-xl bg-[#e5b842]/30 blur-sm animate-pulse pointer-events-none" />
+              {headerQrUrl ? (
+                <img
+                  src={headerQrUrl}
+                  alt="Scan QR code to join"
+                  className="relative z-10 w-[56px] h-[56px] sm:w-[66px] sm:h-[66px] rounded-xl shadow-md bg-[#e5b842] p-0.5 border border-black/30 object-contain"
+                />
+              ) : (
+                <div className="relative z-10 w-[56px] h-[56px] sm:w-[66px] sm:h-[66px] rounded-xl bg-[#e5b842] flex items-center justify-center">
+                  <QrCode className="w-8 h-8 text-black" />
+                </div>
+              )}
+              <span className="absolute -top-1 -right-1 z-20 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e5b842] opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#e5b842]" />
+              </span>
+            </div>
 
-            <button
-              onClick={() => navigateToView('wall')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
-                currentView === 'wall'
-                  ? 'bg-[#e5b842] text-black shadow-md'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <Tv className="w-3.5 h-3.5" />
-              <span>Wall Screen</span>
-            </button>
-
-            <button
-              onClick={() => navigateToView('admin')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
-                currentView === 'admin'
-                  ? 'bg-[#e5b842] text-black shadow-md'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Staff Queue</span>
-            </button>
-
-            <button
-              onClick={() => navigateToView('commercial')}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all ${
-                currentView === 'commercial'
-                  ? 'bg-[#e5b842] text-black shadow-md'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Venues</span>
-            </button>
-          </nav>
+            <div className="flex flex-col justify-center text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm font-black text-[#e5b842] tracking-wider uppercase leading-none drop-shadow">
+                  SCAN TO JOIN
+                </span>
+                <span className="flex items-center gap-0.5 bg-[#e5b842]/20 text-[#e5b842] text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                  <Sparkles className="w-2 h-2" /> LIVE
+                </span>
+              </div>
+              <span className="text-[10px] sm:text-[11px] text-zinc-300 font-medium leading-tight mt-1">
+                Open Camera on Phone
+              </span>
+              <span className="text-[9px] text-[#e5b842]/90 font-bold uppercase tracking-wider mt-0.5">
+                Instant Screen Broadcast
+              </span>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -254,6 +259,46 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Discrete Bottom Footer with Quick Operator Links */}
+      {currentView !== 'wall' && (
+        <footer className="border-t border-white/10 bg-zinc-950/60 py-2.5 px-4 text-center text-xs text-zinc-400">
+          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigateToView('guest')}
+                className={`transition-colors cursor-pointer hover:text-white font-medium ${
+                  currentView === 'guest' ? 'text-[#e5b842] font-bold' : 'text-zinc-400'
+                }`}
+              >
+                Guest Camera
+              </button>
+              <span className="text-zinc-600">•</span>
+              <button
+                onClick={() => navigateToView('wall')}
+                className={`transition-colors cursor-pointer hover:text-[#e5b842] font-medium ${
+                  currentView === 'wall' ? 'text-[#e5b842] font-bold' : 'text-zinc-400'
+                }`}
+              >
+                TV Wall Screen
+              </button>
+              <span className="text-zinc-600">•</span>
+              <button
+                onClick={() => navigateToView('admin')}
+                className={`transition-colors cursor-pointer hover:text-[#e5b842] font-medium ${
+                  currentView === 'admin' ? 'text-[#e5b842] font-bold' : 'text-zinc-400'
+                }`}
+              >
+                Staff Moderation
+              </button>
+            </div>
+
+            <div className="text-[11px] text-zinc-400">
+              SingShot Live Stage Broadcast • London Karaoke Club
+            </div>
+          </div>
+        </footer>
+      )}
 
       {/* Camera Capture Modal */}
       {isCameraOpen && (

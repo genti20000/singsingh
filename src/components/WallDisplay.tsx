@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import QRCode from 'qrcode';
-import { Submission, Venue, QRShape, WallLayoutMode } from '../types';
-import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
+import { Submission, Venue, WallLayoutMode } from '../types';
 import { BrandedCard } from './BrandedCard';
 import { ParticleCanvas } from './ParticleCanvas';
 import { BroadcastNewsFlash } from './BroadcastNewsFlash';
@@ -13,22 +12,15 @@ import {
   Maximize2,
   Minimize2,
   Radio,
-  Shapes,
-  Check,
-  Square,
-  LayoutGrid,
-  Columns3,
-  Columns2,
-  GalleryHorizontal,
   ChevronLeft,
   ChevronRight,
   Play,
   Pause,
-  Tv,
   Flame,
   Zap,
   Mic,
   Music,
+  QrCode,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -45,13 +37,8 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [featuredSub, setFeaturedSub] = useState<Submission | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [qrShape, setQrShape] = useState<QRShape>(venue.qr_shape || 'squircle');
-  const [showShapePicker, setShowShapePicker] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [timeString, setTimeString] = useState('');
-
-  const shapeConfig = QR_SHAPES_CONFIG[qrShape] || QR_SHAPES_CONFIG.squircle;
-  const shapeList: QRShape[] = ['squircle', 'circle', 'hexagon', 'square', 'diamond', 'shield', 'star'];
 
   // Sync layout mode from props if updated
   useEffect(() => {
@@ -60,30 +47,12 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     }
   }, [venue.wall_layout_mode, layoutMode]);
 
-  const handleCycleShape = () => {
-    const nextIdx = (shapeList.indexOf(qrShape) + 1) % shapeList.length;
-    const nextShape = shapeList[nextIdx];
-    setQrShape(nextShape);
-    DataService.updateVenue({ qr_shape: nextShape });
-  };
-
-  const handleSelectShape = (shape: QRShape) => {
-    setQrShape(shape);
-    setShowShapePicker(false);
-    DataService.updateVenue({ qr_shape: shape });
-  };
-
-  const handleSetLayout = (mode: WallLayoutMode) => {
-    setLayoutMode(mode);
-    DataService.updateVenue({ wall_layout_mode: mode });
-  };
-
-  // 1. Generate QR Code for guest scanning
+  // 1. Generate high-resolution QR Code for guest scanning
   useEffect(() => {
     const appUrl = window.location.origin;
     QRCode.toDataURL(appUrl, {
       margin: 1,
-      width: 240,
+      width: 320,
       color: {
         dark: '#000000',
         light: '#e5b842',
@@ -240,25 +209,13 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     };
   }, [submissions, currentIndex]);
 
-  const LAYOUT_BUTTONS: {
-    id: WallLayoutMode;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-  }[] = [
-    { id: 'spotlight', label: 'Spotlight', icon: Square },
-    { id: 'quad', label: 'Quad (2x2)', icon: LayoutGrid },
-    { id: 'mosaic', label: 'Mosaic', icon: Columns3 },
-    { id: 'duet', label: 'Duet', icon: Columns2 },
-    { id: 'carousel', label: 'Carousel', icon: GalleryHorizontal },
-  ];
-
   return (
     <div className="singshot-wall relative h-screen w-screen overflow-hidden bg-[#050505] text-white flex flex-col justify-between select-none font-sans">
       {/* Background Nightlife Ambient Particle Canvas */}
       <ParticleCanvas color="#e5b842" density={75} speed={0.8} />
 
-      {/* TOP-LEFT CORNER FLOATING HUD: Branding, Live Status, Clock & Layout Switcher */}
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-40 flex items-center gap-2 max-w-[calc(100vw-190px)]">
+      {/* TOP-LEFT CORNER FLOATING HUD: Branding, Live Status, Clock & Controls */}
+      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-40 flex items-center gap-2 max-w-[calc(100vw-230px)]">
         <div className="flex items-center gap-2.5 bg-zinc-950/85 backdrop-blur-xl border border-white/15 p-1.5 sm:p-2 pr-3 rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)]">
           {/* Venue Mini Logo */}
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full overflow-hidden shadow-[0_0_20px_rgba(229,184,66,0.5)] shrink-0 border border-[#e5b842]/70 bg-black">
@@ -286,7 +243,7 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
             </div>
 
             <div className="flex items-center gap-1.5 text-[10px] text-zinc-300 font-medium leading-none mt-1">
-              <span className="hidden sm:inline text-zinc-400 truncate max-w-[110px]">
+              <span className="hidden sm:inline text-zinc-400 truncate max-w-[120px]">
                 {venue.sub_name || 'London Karaoke Club'}
               </span>
               <span className="hidden sm:inline text-[#e5b842]">•</span>
@@ -294,32 +251,8 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
             </div>
           </div>
 
-          {/* Quick Layout Mode Buttons in Floating Corner */}
-          <div className="hidden lg:flex items-center gap-1 ml-2 pl-2 border-l border-white/15">
-            {LAYOUT_BUTTONS.map((btn) => {
-              const Icon = btn.icon;
-              const isActive = layoutMode === btn.id;
-              return (
-                <button
-                  key={btn.id}
-                  id={`wall-layout-btn-${btn.id}`}
-                  onClick={() => handleSetLayout(btn.id)}
-                  title={`Switch to ${btn.label} layout`}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-[#e5b842] text-black shadow-md shadow-[#e5b842]/30 font-extrabold scale-105'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{btn.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
           {/* Slideshow and Fullscreen Quick Icons */}
-          <div className="flex items-center gap-1 ml-1">
+          <div className="flex items-center gap-1 ml-1.5 pl-1.5 border-l border-white/15">
             <button
               onClick={() => setIsPaused(!isPaused)}
               className="p-1.5 rounded-xl bg-zinc-900/90 border border-white/10 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all cursor-pointer"
@@ -338,84 +271,42 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
         </div>
       </div>
 
-      {/* TOP-RIGHT CORNER FLOATING HUD: QR Code Scan Widget with Shape Selector */}
+      {/* TOP-RIGHT CORNER FLOATING HUD: Enlarged QR Code Scanning Widget */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-40 flex items-center gap-2">
-        <div className={`wall-qr-widget relative flex items-center gap-2 bg-zinc-950/85 backdrop-blur-xl ${shapeConfig.containerClassName} p-1.5 pr-2.5 shadow-[0_4px_30px_rgba(229,184,66,0.35)] transition-all duration-300 border border-[#e5b842]/60`}>
-          {/* Pulsing Neon Radar Glow behind QR */}
+        <div className="wall-qr-widget relative flex items-center gap-3 bg-zinc-950/90 backdrop-blur-xl rounded-2xl p-2 sm:p-2.5 pr-3.5 shadow-[0_4px_35px_rgba(229,184,66,0.4)] transition-all duration-300 border-2 border-[#e5b842]/70 ring-1 ring-[#e5b842]/30">
+          {/* Pulsing Neon Radar Glow behind enlarged QR */}
           <div className="relative shrink-0">
-            <div className="absolute -inset-1 rounded-xl bg-[#e5b842]/35 blur-sm animate-pulse pointer-events-none" />
+            <div className="absolute -inset-1.5 rounded-2xl bg-[#e5b842]/35 blur-md animate-pulse pointer-events-none" />
             {qrCodeDataUrl ? (
               <img
                 src={qrCodeDataUrl}
-                alt={`Scan QR Code (${shapeConfig.name})`}
-                onClick={handleCycleShape}
-                title="Click QR code to cycle frame shape"
-                className={`relative z-10 w-[42px] h-[42px] sm:w-[46px] sm:h-[46px] cursor-pointer hover:scale-105 transition-transform duration-300 ${shapeConfig.imgClassName}`}
+                alt="Scan to join live screen"
+                className="relative z-10 w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] rounded-xl shadow-md transition-transform duration-300 bg-[#e5b842] p-0.5 border border-black/30"
               />
             ) : (
-              <div className="relative z-10 w-[42px] h-[42px] sm:w-[46px] sm:h-[46px] rounded-lg bg-[#e5b842]" />
+              <div className="relative z-10 w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] rounded-xl bg-[#e5b842] flex items-center justify-center">
+                <QrCode className="w-8 h-8 text-black" />
+              </div>
             )}
-            <span className="absolute -top-0.5 -right-0.5 z-20 flex h-2.5 w-2.5">
+            <span className="absolute -top-1 -right-1 z-20 flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e5b842] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#e5b842]" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#e5b842]" />
             </span>
           </div>
 
           <div className="text-left flex flex-col justify-center">
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] sm:text-[11px] font-black text-[#e5b842] tracking-wider uppercase leading-none drop-shadow">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs sm:text-sm font-black text-[#e5b842] tracking-wider uppercase leading-none drop-shadow">
                 SCAN TO JOIN
               </span>
-              <button
-                type="button"
-                onClick={() => setShowShapePicker(!showShapePicker)}
-                title="Choose QR Code shape frame"
-                className="flex items-center gap-0.5 bg-[#e5b842]/20 hover:bg-[#e5b842]/40 text-[#e5b842] border border-[#e5b842]/50 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider transition-all cursor-pointer"
-              >
-                <Shapes className="w-2 h-2" />
-                <span>{shapeConfig.name}</span>
-              </button>
             </div>
-            <span className="text-[9px] text-zinc-300 font-medium leading-tight mt-0.5">
-              Selfie to Live Screen
+            <span className="text-[10px] sm:text-[11px] text-zinc-300 font-medium leading-tight mt-1">
+              Snap selfie with phone
+            </span>
+            <span className="text-[9px] text-[#e5b842]/90 font-bold uppercase tracking-wider mt-0.5">
+              Instant Big Screen
             </span>
           </div>
-
-          {/* QR Shape Popover Menu */}
-          {showShapePicker && (
-            <div className="absolute top-full right-0 mt-2 bg-zinc-950/95 backdrop-blur-xl border border-[#e5b842]/50 rounded-2xl p-2 shadow-2xl z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-150">
-              <div className="text-[10px] font-black text-[#e5b842] uppercase tracking-wider px-2 py-1 border-b border-white/10 mb-1">
-                Select QR Frame Shape
-              </div>
-              <div className="grid grid-cols-1 gap-1">
-                {shapeList.map((shapeKey) => {
-                  const itemConfig = QR_SHAPES_CONFIG[shapeKey];
-                  const isCurrent = shapeKey === qrShape;
-                  return (
-                    <button
-                      key={shapeKey}
-                      onClick={() => handleSelectShape(shapeKey)}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                        isCurrent
-                          ? 'bg-[#e5b842] text-black font-black'
-                          : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-3.5 h-3.5 border ${
-                            isCurrent ? 'border-black bg-black/20' : 'border-[#e5b842]/60 bg-[#e5b842]/10'
-                          } ${itemConfig.imgClassName}`}
-                        />
-                        <span>{itemConfig.name}</span>
-                      </div>
-                      {isCurrent && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

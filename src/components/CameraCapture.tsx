@@ -1,10 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Camera, RefreshCw, FlipHorizontal, Upload, X, Check, Sparkles, Wand2, Frame, Timer, Zap } from 'lucide-react';
+import { Camera, RefreshCw, FlipHorizontal, Upload, X, Check, Sparkles, Wand2, Frame, Timer, Zap, Scissors, Layers } from 'lucide-react';
 import { BEAUTIFY_PRESETS, BeautifyPreset, processBeautifiedImage } from '../utils/beautify';
 import { FRAME_STYLES, FrameStyleOption } from '../utils/frameStyles';
 import { FrameOverlay } from './FrameOverlay';
 import { FrameStyleId } from '../types';
+import { CUTOUT_PRESETS, CutoutStyle, removeBackgroundClient } from '../utils/removeBackground';
 
 interface CameraCaptureProps {
   onCapture: (imageDataUrl: string, originalDataUrl?: string, frameStyle?: FrameStyleId) => void;
@@ -28,9 +29,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [rawCapturedImage, setRawCapturedImage] = useState<string | null>(initialImage);
   const [activeFilter, setActiveFilter] = useState<BeautifyPreset>('glow');
+  const [activeCutout, setActiveCutout] = useState<CutoutStyle>('transparent');
   const [activeFrameStyle, setActiveFrameStyle] = useState<FrameStyleId>(initialFrameStyle);
-  const [previewTab, setPreviewTab] = useState<'frames' | 'beautify'>('frames');
+  const [previewTab, setPreviewTab] = useState<'frames' | 'cutout' | 'beautify'>('cutout');
   const [displayImage, setDisplayImage] = useState<string | null>(initialImage);
+  const [isProcessingCutout, setIsProcessingCutout] = useState(false);
   const [isProcessingFilter, setIsProcessingFilter] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isLoadingCamera, setIsLoadingCamera] = useState(false);
@@ -68,24 +71,56 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     };
   }, []);
 
-  // Apply beautify preset whenever raw image or active filter changes
+  // Process Cutout & Beautify whenever raw image, activeFilter, or activeCutout changes
   useEffect(() => {
     if (!rawCapturedImage) {
       setDisplayImage(null);
       return;
     }
 
-    if (activeFilter === 'original') {
-      setDisplayImage(rawCapturedImage);
-      return;
-    }
+    let isCancelled = false;
 
-    setIsProcessingFilter(true);
-    processBeautifiedImage(rawCapturedImage, activeFilter, (processed) => {
-      setDisplayImage(processed);
-      setIsProcessingFilter(false);
-    });
-  }, [rawCapturedImage, activeFilter]);
+    const processImagePipeline = async () => {
+      setIsProcessingCutout(true);
+      try {
+        // Step 1: Background removal / Cutout
+        let intermediate = rawCapturedImage;
+        if (activeCutout !== 'original') {
+          intermediate = await removeBackgroundClient(rawCapturedImage, activeCutout);
+        }
+
+        if (isCancelled) return;
+
+        // Step 2: Beautify filter
+        if (activeFilter === 'original') {
+          setDisplayImage(intermediate);
+          setIsProcessingCutout(false);
+        } else {
+          setIsProcessingFilter(true);
+          processBeautifiedImage(intermediate, activeFilter, (processed) => {
+            if (!isCancelled) {
+              setDisplayImage(processed);
+              setIsProcessingCutout(false);
+              setIsProcessingFilter(false);
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Image pipeline processing error:', err);
+        if (!isCancelled) {
+          setDisplayImage(rawCapturedImage);
+          setIsProcessingCutout(false);
+          setIsProcessingFilter(false);
+        }
+      }
+    };
+
+    processImagePipeline();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [rawCapturedImage, activeCutout, activeFilter]);
 
   // Start Camera Stream
   const startCamera = async (mode: 'user' | 'environment') => {
@@ -327,24 +362,54 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               <FrameOverlay frameStyle={activeFrameStyle} />
 
               {/* Active Badges */}
-              <div className="absolute bottom-3 left-3 flex items-center gap-1.5 z-20">
+              <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-1.5 z-20">
+                {activeCutout !== 'original' && (
+                  <div className="bg-amber-400 text-black px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 shadow-lg">
+                    <Scissors className="w-3 h-3 text-black" />
+                    <span>{CUTOUT_PRESETS.find((c) => c.id === activeCutout)?.badge || '✂️ CUTOUT'}</span>
+                  </div>
+                )}
                 {activeFrameStyle !== 'none' && (
                   <div className="bg-black/85 backdrop-blur-md border border-[#e5b842]/50 px-2.5 py-1 rounded-full text-[10px] text-[#e5b842] font-black flex items-center gap-1 shadow-lg">
                     <Frame className="w-3 h-3 text-[#e5b842]" />
                     <span>{currentFrameOption.badge}</span>
                   </div>
                 )}
-                <div className="bg-black/80 backdrop-blur-md border border-white/20 px-2.5 py-1 rounded-full text-[10px] text-zinc-200 font-bold flex items-center gap-1 shadow-lg">
-                  <Wand2 className="w-3 h-3 text-[#e5b842]" />
-                  <span>{BEAUTIFY_PRESETS.find((p) => p.id === activeFilter)?.label || 'Beautified'}</span>
-                </div>
+                {activeFilter !== 'original' && (
+                  <div className="bg-black/80 backdrop-blur-md border border-white/20 px-2.5 py-1 rounded-full text-[10px] text-zinc-200 font-bold flex items-center gap-1 shadow-lg">
+                    <Wand2 className="w-3 h-3 text-[#e5b842]" />
+                    <span>{BEAUTIFY_PRESETS.find((p) => p.id === activeFilter)?.label || 'Beautified'}</span>
+                  </div>
+                )}
               </div>
 
-              {isProcessingFilter && (
-                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-30">
-                  <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-full text-xs font-bold text-[#e5b842]">
-                    <Sparkles className="w-4 h-4 animate-spin" /> Beautifying Photo...
+              {/* Quick Cutout Toggle Pill in Top-Right of photo */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveCutout((prev) => (prev === 'transparent' ? 'original' : 'transparent'));
+                  setPreviewTab('cutout');
+                }}
+                className={`absolute top-3 right-3 z-30 px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 transition-all shadow-xl backdrop-blur-md border cursor-pointer ${
+                  activeCutout !== 'original'
+                    ? 'bg-amber-400 text-black border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.6)]'
+                    : 'bg-black/80 text-zinc-300 border-white/20 hover:text-white hover:bg-black'
+                }`}
+                title="Toggle Instant Background Removal"
+              >
+                <Scissors className={`w-3.5 h-3.5 ${activeCutout !== 'original' ? 'text-black' : 'text-[#e5b842]'}`} />
+                <span>{activeCutout !== 'original' ? 'No Background (On)' : 'Remove BG'}</span>
+              </button>
+
+              {(isProcessingCutout || isProcessingFilter) && (
+                <div className="absolute inset-0 bg-black/65 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-30 animate-in fade-in duration-150">
+                  <div className="flex items-center gap-2 bg-zinc-900 border border-[#e5b842]/40 px-4 py-2.5 rounded-full text-xs font-black text-[#e5b842] shadow-2xl">
+                    <Sparkles className="w-4 h-4 animate-spin text-[#e5b842]" />
+                    <span>{isProcessingCutout ? 'Removing Background...' : 'Applying Beautify Filter...'}</span>
                   </div>
+                  <span className="text-[10px] text-zinc-400 font-semibold tracking-wider">
+                    {isProcessingCutout ? 'Extracting VIP Singer Cutout' : 'Enhancing Stage Glow'}
+                  </span>
                 </div>
               )}
             </div>
@@ -469,8 +534,24 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         {/* PHOTO CUSTOMIZATION TABS & SELECTION GRIDS (Only visible after capture) */}
         {rawCapturedImage && (
           <div className="mt-3 flex flex-col gap-2">
-            {/* Customization Nav Tabs */}
+            {/* Customization Nav Tabs: Frames | Cutout / No BG | Beautify */}
             <div className="flex items-center rounded-xl bg-zinc-900/90 p-1 border border-white/10">
+              <button
+                type="button"
+                onClick={() => setPreviewTab('cutout')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  previewTab === 'cutout'
+                    ? 'bg-amber-400 text-black shadow-md font-extrabold'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <Scissors className="w-3.5 h-3.5" />
+                <span>Remove BG</span>
+                {activeCutout !== 'original' && (
+                  <span className="w-2 h-2 rounded-full bg-black" />
+                )}
+              </button>
+
               <button
                 type="button"
                 onClick={() => setPreviewTab('frames')}
@@ -481,7 +562,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                 }`}
               >
                 <Frame className="w-3.5 h-3.5" />
-                <span>Frame Styles</span>
+                <span>Frames</span>
                 {activeFrameStyle !== 'none' && (
                   <span className="w-2 h-2 rounded-full bg-amber-950" />
                 )}
@@ -497,11 +578,53 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                 }`}
               >
                 <Wand2 className="w-3.5 h-3.5" />
-                <span>Photo Beautify</span>
+                <span>Beautify</span>
               </button>
             </div>
 
-            {/* TAB 1: FRAME STYLES SELECTION GRID */}
+            {/* TAB 1: BACKGROUND REMOVAL & CUTOUT PRESETS */}
+            {previewTab === 'cutout' && (
+              <div className="bg-zinc-900/90 border border-amber-400/30 rounded-2xl p-2.5 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <span className="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                    <Scissors className="w-3.5 h-3.5" /> Background Removal
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-medium">
+                    {CUTOUT_PRESETS.find((c) => c.id === activeCutout)?.description || 'Transparent VIP Cutout'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {CUTOUT_PRESETS.map((preset) => {
+                    const isSelected = activeCutout === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => setActiveCutout(preset.id)}
+                        className={`p-2 rounded-xl text-left border transition-all flex flex-col justify-between gap-1 ${
+                          isSelected
+                            ? 'border-amber-400 bg-zinc-800 shadow-[0_0_15px_rgba(251,191,36,0.3)] ring-1 ring-amber-400'
+                            : 'border-white/10 bg-zinc-950/80 hover:border-white/30 text-zinc-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`text-[10px] font-extrabold ${isSelected ? 'text-amber-400' : 'text-white'}`}>
+                            {preset.badge}
+                          </span>
+                          {isSelected && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
+                        </div>
+                        <span className="text-[11px] font-semibold text-zinc-300 truncate">
+                          {preset.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: FRAME STYLES SELECTION GRID */}
             {previewTab === 'frames' && (
               <div className="bg-zinc-900/90 border border-white/10 rounded-2xl p-2.5 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between mb-2 px-1">
@@ -548,7 +671,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               </div>
             )}
 
-            {/* TAB 2: PHOTO BEAUTIFY SELECTION GRID */}
+            {/* TAB 3: PHOTO BEAUTIFY SELECTION GRID */}
             {previewTab === 'beautify' && (
               <div className="bg-zinc-900/90 border border-white/10 rounded-2xl p-2.5 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between mb-2 px-1">

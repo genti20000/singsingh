@@ -10,6 +10,31 @@ let eventsStore: EventSession[] = [...INITIAL_EVENTS];
 let rewardsStore: Reward[] = [...INITIAL_REWARDS];
 let submissionsStore: Submission[] = [];
 
+// SSE connected clients
+const sseClients = new Set<express.Response>();
+
+function notifySSE(type: string, data?: unknown) {
+  const payload = `data: ${JSON.stringify({ type, data, timestamp: Date.now() })}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(payload);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}
+
+// Heartbeat ping to keep SSE connections healthy
+setInterval(() => {
+  for (const client of sseClients) {
+    try {
+      client.write(': ping\n\n');
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}, 15000);
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -24,19 +49,38 @@ async function startServer() {
     res.json({ status: 'ok', time: new Date().toISOString() });
   });
 
+  // Real-time Server-Sent Events (SSE) Stream for WallDisplay & Admin background auto-refresh
+  app.get(['/api/wall/stream', '/api/stream'], (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders?.();
+
+    res.write(`data: ${JSON.stringify({ type: 'CONNECTED', timestamp: Date.now() })}\n\n`);
+    sseClients.add(res);
+
+    req.on('close', () => {
+      sseClients.delete(res);
+    });
+  });
+
   // Get Venue details
   app.get('/api/venue', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(venueStore);
   });
 
   // Update Venue details
   app.put('/api/venue', (req, res) => {
     venueStore = { ...venueStore, ...req.body };
+    notifySSE('VENUE_UPDATED', venueStore);
     res.json(venueStore);
   });
 
   // Get Events
   app.get('/api/events', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(eventsStore);
   });
 
@@ -60,11 +104,13 @@ async function startServer() {
     }
 
     eventsStore.unshift(newEvent);
+    notifySSE('EVENT_CREATED', newEvent);
     res.json(newEvent);
   });
 
   // Get Rewards
   app.get('/api/rewards', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(rewardsStore.filter((r) => r.active));
   });
 
@@ -80,11 +126,16 @@ async function startServer() {
       active: true,
     };
     rewardsStore.push(newReward);
+    notifySSE('REWARD_CREATED', newReward);
     res.json(newReward);
   });
 
   // Get Submissions (Guest & Wall & Admin view)
   app.get('/api/submissions', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const { status, event_id } = req.query;
     let list = [...submissionsStore];
 
@@ -128,6 +179,7 @@ async function startServer() {
     };
 
     submissionsStore.unshift(newSub);
+    notifySSE('SUBMISSION_CREATED', newSub);
     res.json(newSub);
   });
 
@@ -172,6 +224,7 @@ async function startServer() {
     }
 
     submissionsStore[subIndex] = current;
+    notifySSE('SUBMISSION_UPDATED', current);
     res.json(current);
   });
 
@@ -179,6 +232,7 @@ async function startServer() {
   app.delete('/api/submissions/:id', (req, res) => {
     const { id } = req.params;
     submissionsStore = submissionsStore.filter((s) => s.id !== id);
+    notifySSE('SUBMISSION_DELETED', { id });
     res.json({ success: true, id });
   });
 
@@ -199,7 +253,73 @@ async function startServer() {
     sub.featured = true;
     sub.featured_at = new Date().toISOString();
 
+    notifySSE('SUBMISSION_FEATURED', sub);
     res.json(sub);
+  });
+
+  // AI & Smart Background Removal API Endpoint
+  app.post('/api/remove-bg', async (req, res) => {
+    try {
+      const { image, style } = req.body;
+      if (!image) {
+        return res.status(400).json({ error: 'Image is required' });
+      }
+
+      // Check if GEMINI_API_KEY is available for high-fidelity AI segmentation
+      if (process.env.GEMINI_API_KEY) {
+        try {
+          const { GoogleGenAI } = await import('@google/genai');
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          
+          let base64Data = image;
+          let mimeType = 'image/jpeg';
+          if (image.startsWith('data:')) {
+            const parts = image.split(',');
+            const match = parts[0].match(/:(.*?);/);
+            if (match) mimeType = match[1];
+            base64Data = parts[1];
+          }
+
+          const response = await ai.models.generateContent({
+            model: 'gemini-3.1-flash-lite-image',
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    text: 'Extract the person/subject cleanly as a cutout on a pure transparent background. Remove all room walls, backgrounds, and clutter completely, keeping only the singer/person.',
+                  },
+                  {
+                    inlineData: {
+                      mimeType: mimeType || 'image/jpeg',
+                      data: base64Data,
+                    },
+                  },
+                ],
+              },
+            ],
+          });
+
+          // Check if image candidate was returned
+          const candidatePart = response.candidates?.[0]?.content?.parts?.find(
+            (p: any) => p.inlineData?.data
+          );
+          if (candidatePart?.inlineData?.data) {
+            const outMime = candidatePart.inlineData.mimeType || 'image/png';
+            const outUrl = `data:${outMime};base64,${candidatePart.inlineData.data}`;
+            return res.json({ success: true, image_url: outUrl, mode: 'gemini-ai' });
+          }
+        } catch (aiErr) {
+          console.warn('Gemini AI background removal fallback to client engine:', aiErr);
+        }
+      }
+
+      // Fallback: indicate client-side canvas segmentation should run
+      return res.json({ success: false, fallbackToClient: true });
+    } catch (err: any) {
+      console.error('Background removal error:', err);
+      res.status(500).json({ error: err.message || 'Background removal failed' });
+    }
   });
 
   // --- VITE MIDDLEWARE / STATIC FILE SERVING ---

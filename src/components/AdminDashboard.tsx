@@ -4,6 +4,7 @@ import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
 import { LondonKaraokeLogo } from './LondonKaraokeLogo';
 import { DataService, subscribeToSync } from '../services/dataService';
 import { INITIAL_EVENTS, INITIAL_REWARDS } from '../data/initialData';
+import { removeBackground } from '../utils/removeBackground';
 import {
   Check,
   X,
@@ -25,6 +26,7 @@ import {
   Columns2,
   GalleryHorizontal,
   MonitorPlay,
+  Scissors,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -42,6 +44,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [rewards, setRewards] = useState<Reward[]>(() => INITIAL_REWARDS);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'all'>('pending');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [processingCutoutId, setProcessingCutoutId] = useState<string | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const [newSubmissionsAlert, setNewSubmissionsAlert] = useState<string | null>(null);
   const [currentLayoutMode, setCurrentLayoutMode] = useState<WallLayoutMode>(
@@ -239,6 +242,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setShowSettingsModal(false);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleRemoveBg = async (item: Submission) => {
+    setProcessingCutoutId(item.id);
+    try {
+      const cutoutUrl = await removeBackground(item.image_url, 'transparent');
+      await DataService.updateSubmission(item.id, {
+        image_url: cutoutUrl,
+      });
+      fetchData(false);
+    } catch (err) {
+      console.error('Failed to remove background:', err);
+    } finally {
+      setProcessingCutoutId(null);
     }
   };
 
@@ -581,6 +599,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       title="Trigger full screen takeover on wall"
                     >
                       <Sparkles className="w-4 h-4" /> FEATURE NOW
+                    </button>
+
+                    <button
+                      onClick={() => handleRemoveBg(item)}
+                      disabled={processingCutoutId === item.id}
+                      className="flex items-center gap-1 bg-zinc-800 hover:bg-amber-400 hover:text-black text-amber-300 border border-amber-500/30 font-bold text-xs px-3 py-2 rounded-xl transition-all disabled:opacity-50"
+                      title="Remove background from this photo"
+                    >
+                      <Scissors className={`w-3.5 h-3.5 ${processingCutoutId === item.id ? 'animate-spin text-amber-400' : ''}`} />
+                      <span>{processingCutoutId === item.id ? 'CUTTING...' : 'REMOVE BG'}</span>
                     </button>
 
                     <button

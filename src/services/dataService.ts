@@ -23,6 +23,61 @@ const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in windo
   ? new BroadcastChannel('singshot_realtime_sync')
   : null;
 
+// Realtime Server-Sent Events (SSE) Client Connection
+let sseConnection: EventSource | null = null;
+let sseReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+function initSSEStream() {
+  if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
+  if (sseConnection && sseConnection.readyState !== EventSource.CLOSED) return;
+
+  try {
+    sseConnection = new EventSource('/api/wall/stream');
+
+    sseConnection.onmessage = (e) => {
+      try {
+        if (!e.data) return;
+        const parsed = JSON.parse(e.data);
+        if (parsed && parsed.type && parsed.type !== 'CONNECTED') {
+          broadcastSync(parsed.type, parsed.data);
+        }
+      } catch (err) {
+        console.warn('Error parsing SSE stream message:', err);
+      }
+    };
+
+    sseConnection.onerror = () => {
+      if (sseConnection) {
+        sseConnection.close();
+        sseConnection = null;
+      }
+      // Reconnect after 3 seconds with backoff
+      if (!sseReconnectTimer) {
+        sseReconnectTimer = setTimeout(() => {
+          sseReconnectTimer = null;
+          initSSEStream();
+        }, 3000);
+      }
+    };
+  } catch (err) {
+    console.warn('SSE stream initialization failed:', err);
+  }
+}
+
+// Start SSE stream in browser environment
+if (typeof window !== 'undefined') {
+  initSSEStream();
+}
+
+export function preloadImages(urls: string[]): void {
+  if (typeof window === 'undefined') return;
+  urls.forEach((url) => {
+    if (!url) return;
+    const img = new Image();
+    img.src = url;
+  });
+}
+
 export const broadcastSync = (type: string, data?: unknown) => {
   try {
     if (syncChannel) {
@@ -154,9 +209,16 @@ export const DataService = {
       const params = new URLSearchParams();
       if (filters?.status) params.append('status', filters.status);
       if (filters?.event_id) params.append('event_id', filters.event_id);
+      params.append('_t', Date.now().toString());
 
-      const url = `/api/submissions${params.toString() ? `?${params.toString()}` : ''}`;
-      const res = await fetch(url);
+      const url = `/api/submissions?${params.toString()}`;
+      const res = await fetch(url, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+      });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {

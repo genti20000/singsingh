@@ -303,9 +303,14 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         className="hidden"
       />
 
-      <div className="relative flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-[#e5b842]/40 bg-zinc-950 p-4 text-white shadow-2xl my-auto">
+      <div
+        className="camera-capture-shell relative flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-[#e5b842]/50 bg-zinc-950 p-4 text-white shadow-2xl my-auto"
+        style={!rawCapturedImage ? { backgroundImage: "url('/lkc-vip-birthday-spotlight.svg')" } : undefined}
+      >
+        {!rawCapturedImage && <div className="camera-artwork-wash absolute inset-0" aria-hidden="true" />}
+
         {/* Header Bar */}
-        <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="relative z-10 mb-3 flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-[#e5b842] animate-ping" />
             <span className="font-serif font-bold text-lg text-white">SingShot Selfie</span>
@@ -342,7 +347,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         </div>
 
         {/* View Area: Camera Stream or Photo Preview */}
-        <div className="relative flex h-[340px] sm:h-[380px] w-full items-center justify-center overflow-hidden rounded-2xl bg-black border border-white/10">
+        <div className="camera-viewport relative z-10 flex w-full items-center justify-center overflow-hidden rounded-2xl border border-[#e5b842]/45 bg-black/60">
           {/* Visual Camera Flash */}
           {isFlashing && (
             <div className="absolute inset-0 bg-white z-50 pointer-events-none transition-opacity duration-150" />
@@ -433,12 +438,16 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                 className={`h-full w-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
               />
 
+              <div className="absolute left-3 top-3 z-20 rounded-full border border-white/20 bg-black/55 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#fff1af] backdrop-blur-sm">
+                Portrait capture · front camera
+              </div>
+
               {/* Selfie Frame Guide Overlay (hidden during countdown for clear view) */}
               {countdown === null && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="h-[250px] w-[190px] rounded-[50%] border-2 border-dashed border-[#e5b842]/70 shadow-[0_0_20px_rgba(229,184,66,0.3)] flex items-center justify-center">
-                    <span className="text-[10px] uppercase font-bold text-[#e5b842] bg-black/60 px-2 py-0.5 rounded-full">
-                      Center Face Here
+                  <div className="camera-face-guide flex h-[58%] w-[66%] items-end justify-center rounded-[48%] border-2 border-dashed border-[#e5b842]/80 pb-6 shadow-[0_0_28px_rgba(229,184,66,0.35)]">
+                    <span className="rounded-full border border-white/20 bg-black/65 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#fff1af] backdrop-blur-sm">
+                      Keep face in the light
                     </span>
                   </div>
                 </div>
@@ -533,7 +542,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
         {/* PHOTO CUSTOMIZATION TABS & SELECTION GRIDS (Only visible after capture) */}
         {rawCapturedImage && (
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="relative z-10 mt-3 flex flex-col gap-2">
             {/* Customization Nav Tabs: Frames | Cutout / No BG | Beautify */}
             <div className="flex items-center rounded-xl bg-zinc-900/90 p-1 border border-white/10">
               <button
@@ -706,7 +715,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         )}
 
         {/* Action Controls Footer */}
-        <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="relative z-10 mt-3 flex items-center justify-between gap-3">
           {rawCapturedImage ? (
             <>
               <button

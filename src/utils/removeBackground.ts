@@ -13,7 +13,7 @@ export interface BackgroundRemovalOptions {
   contrastBoost?: number;
 }
 
-export type CutoutStyle = 'transparent' | 'original' | 'gold-glow' | 'studio-dark' | 'soho-neon';
+export type CutoutStyle = 'transparent' | 'original' | 'portrait-blur' | 'gold-glow' | 'studio-dark' | 'soho-neon';
 
 export interface CutoutPreset {
   id: CutoutStyle;
@@ -52,6 +52,12 @@ export const CUTOUT_PRESETS: CutoutPreset[] = [
     label: 'Keep Original BG',
     badge: '🎨 ORIGINAL',
     description: 'Retain the original venue/room background as captured',
+  },
+  {
+    id: 'portrait-blur',
+    label: 'Soft Portrait Blur',
+    badge: '✨ BLUR BG',
+    description: 'Keep you sharp while softly blurring the room behind you',
   },
 ];
 
@@ -103,6 +109,10 @@ export async function removeBackgroundClient(
 ): Promise<string> {
   if (style === 'original') {
     return rawImageDataUrl;
+  }
+
+  if (style === 'portrait-blur') {
+    return blurBackgroundClient(rawImageDataUrl);
   }
 
   return new Promise((resolve, reject) => {
@@ -328,6 +338,44 @@ export async function removeBackgroundClient(
 }
 
 /**
+ * Lightweight portrait-style blur: render a blurred copy of the original image,
+ * then layer the existing subject cutout on top. If canvas blur or segmentation
+ * is unavailable, the untouched capture is returned so the flow stays usable.
+ */
+export async function blurBackgroundClient(rawImageDataUrl: string): Promise<string> {
+  try {
+    const cutoutUrl = await removeBackgroundClient(rawImageDataUrl, 'transparent');
+    const loadImage = (src: string) =>
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+      });
+
+    const [original, cutout] = await Promise.all([loadImage(rawImageDataUrl), loadImage(cutoutUrl)]);
+    const width = Math.min(original.naturalWidth || 1080, 1080);
+    const height = Math.round(width * ((original.naturalHeight || 1440) / (original.naturalWidth || 1080)));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context || !('filter' in context)) return rawImageDataUrl;
+
+    context.save();
+    context.filter = 'blur(18px)';
+    context.drawImage(original, -18, -18, width + 36, height + 36);
+    context.restore();
+    context.drawImage(cutout, 0, 0, width, height);
+
+    return canvas.toDataURL('image/jpeg', 0.94);
+  } catch (error) {
+    console.warn('Portrait blur unavailable; keeping original capture.', error);
+    return rawImageDataUrl;
+  }
+}
+
+/**
  * Unified Background Removal Runner: Tries server API if available, falls back seamlessly to client engine
  */
 export async function removeBackground(
@@ -336,6 +384,10 @@ export async function removeBackground(
 ): Promise<string> {
   if (!imageUrl || style === 'original') {
     return imageUrl;
+  }
+
+  if (style === 'portrait-blur') {
+    return blurBackgroundClient(imageUrl);
   }
 
   try {

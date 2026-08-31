@@ -4,7 +4,6 @@ import QRCode from 'qrcode';
 import { Submission, Venue, WallLayoutMode } from '../types';
 import { BrandedCard } from './BrandedCard';
 import { ParticleCanvas } from './ParticleCanvas';
-import { BroadcastNewsFlash } from './BroadcastNewsFlash';
 import { LondonKaraokeLogo } from './LondonKaraokeLogo';
 import { DataService, subscribeToSync, preloadImages } from '../services/dataService';
 import {
@@ -16,7 +15,6 @@ import {
   ChevronRight,
   Play,
   Pause,
-  Flame,
   Zap,
   Mic,
   Music,
@@ -44,6 +42,14 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const [newArrivalToast, setNewArrivalToast] = useState<{ id: string; name: string; avatar: string } | null>(null);
+  const [heroOrientation, setHeroOrientation] = useState<'portrait' | 'landscape' | 'square'>('landscape');
+  const [liveRailIndex, setLiveRailIndex] = useState(0);
+
+  const liveRailMessages = [
+    'Soho’s favourite voices are taking the spotlight',
+    'Scan the screen to join tonight’s VIP broadcast',
+    'Raise a glass, hit the chorus, own the room',
+  ];
 
   // Ref tracking previous submission IDs to detect new arrivals without flickering
   const prevSubIdsRef = useRef<Set<string>>(new Set());
@@ -83,6 +89,13 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveRailIndex((prev) => (prev + 1) % liveRailMessages.length);
+    }, 5200);
+    return () => clearInterval(interval);
+  }, [liveRailMessages.length]);
 
   // 3. Background Auto-Refresh Engine: pulls approved submissions from venue queue
   const fetchApproved = useCallback(async (isManualTrigger = false) => {
@@ -147,6 +160,7 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
       const featured = currentList.find((s) => s.featured);
       if (featured && featured.id !== featuredSub?.id) {
         setFeaturedSub(featured);
+        setCurrentIndex(currentList.findIndex((submission) => submission.id === featured.id));
         confetti({
           particleCount: 120,
           spread: 90,
@@ -224,7 +238,7 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
 
   // 4. Auto Rotate Cards based on current layout mode
   useEffect(() => {
-    if (submissions.length <= 1 || featuredSub || isPaused) return;
+    if (submissions.length <= 1 || isPaused) return;
 
     const intervalMap: Record<WallLayoutMode, number> = {
       spotlight: 6000,
@@ -249,7 +263,7 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     }, intervalSeconds);
 
     return () => clearInterval(rotateTimer);
-  }, [submissions.length, featuredSub, isPaused, layoutMode]);
+  }, [submissions.length, isPaused, layoutMode]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -260,6 +274,20 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
   };
 
   const activeSubmission = submissions[currentIndex] || submissions[0] || null;
+
+  useEffect(() => {
+    setHeroOrientation('landscape');
+  }, [activeSubmission?.id]);
+
+  const heroRailItems = useMemo(() => {
+    if (!activeSubmission || submissions.length < 2) return { left: [] as Submission[], right: [] as Submission[] };
+    const activeIdx = Math.max(0, submissions.findIndex((submission) => submission.id === activeSubmission.id));
+    const itemAt = (offset: number) => submissions[(activeIdx + offset + submissions.length) % submissions.length];
+    return {
+      left: [itemAt(-1), itemAt(-2), itemAt(-3)].filter((submission, index, list) => submission && list.findIndex((item) => item.id === submission.id) === index),
+      right: [itemAt(1), itemAt(2), itemAt(3)].filter((submission, index, list) => submission && list.findIndex((item) => item.id === submission.id) === index),
+    };
+  }, [activeSubmission, submissions]);
 
   // Quad Grid Slice (4 cards)
   const quadSubmissions = useMemo(() => {
@@ -399,53 +427,28 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
           </div>
         </div>
 
-        {/* Center Floating Occasion Banner (Matching Screenshot) */}
-        <div className="hidden lg:flex items-center justify-between gap-4 bg-black/90 backdrop-blur-xl border border-[#e5b842]/70 px-5 py-2 rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)] max-w-2xl flex-1 mx-2">
-          {/* Yellow Flash Badge */}
-          <div className="flex items-center gap-1.5 bg-[#e5b842] text-black font-black text-xs uppercase px-3 py-1 rounded-full shadow-[0_0_15px_rgba(229,184,66,0.5)] shrink-0">
-            <Sparkles className="w-3.5 h-3.5 fill-black" />
-            <span>
-              {activeSubmission?.occasion?.type === 'birthday'
-                ? 'BIRTHDAY FLASH'
-                : activeSubmission?.occasion?.type === 'hen'
-                ? 'HEN PARTY FLASH'
-                : activeSubmission?.occasion?.type === 'stag'
-                ? 'STAG PARTY FLASH'
-                : activeSubmission?.occasion?.type === 'work'
-                ? 'OFFICE VIP FLASH'
-                : 'STAR FLASH'}
-            </span>
+        {/* Quiet rotating venue rail keeps the wall alive without competing with the hero. */}
+        <div className="live-from-soho-rail hidden lg:flex min-w-0 flex-1 items-center justify-center gap-4 mx-2 rounded-2xl border border-white/10 bg-black/55 px-5 py-2.5 backdrop-blur-xl">
+          <div className="flex items-center gap-2 shrink-0 text-[#e5b842]">
+            <Radio className="w-4 h-4 animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-[0.22em]">Live from Soho</span>
           </div>
-
-          {/* Central Celebratory Message */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="text-xs sm:text-sm font-black text-white tracking-wider uppercase drop-shadow">
-              {activeSubmission?.occasion?.type === 'birthday'
-                ? 'CELEBRATING A VIP BIRTHDAY TONIGHT!'
-                : activeSubmission?.occasion?.type === 'hen'
-                ? 'CELEBRATING THE BRIDE TO BE TONIGHT!'
-                : activeSubmission?.occasion?.type === 'stag'
-                ? 'STAG PARTY VIP CELEBRATION TONIGHT!'
-                : activeSubmission?.occasion?.type === 'work'
-                ? 'OFFICE KARAOKE STARS ON STAGE TONIGHT!'
-                : 'CELEBRATING TONIGHT\'S STAGE SUPERSTARS!'}
-            </div>
-            <div className="text-[10px] font-bold text-[#e5b842] tracking-widest uppercase mt-0.5">
-              ★ RAISE A GLASS & SING OUT LOUD ★
-            </div>
-          </div>
-
-          {/* Animated Gold Audio Equalizer Waves */}
-          <div className="flex items-center gap-1 h-6 shrink-0 px-2">
-            <span className="w-1 bg-[#e5b842] rounded-full animate-eq-1 shadow-[0_0_8px_#e5b842]" />
-            <span className="w-1 bg-[#e5b842] rounded-full animate-eq-2 shadow-[0_0_8px_#e5b842]" />
-            <span className="w-1 bg-[#e5b842] rounded-full animate-eq-3 shadow-[0_0_8px_#e5b842]" />
-            <span className="w-1 bg-[#e5b842] rounded-full animate-eq-4 shadow-[0_0_8px_#e5b842]" />
-          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={liveRailIndex}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
+              className="min-w-0 truncate text-center text-xs font-semibold tracking-wide text-zinc-300"
+            >
+              {liveRailMessages[liveRailIndex]}
+            </motion.span>
+          </AnimatePresence>
         </div>
 
         {/* Right HUD: QR Code Scanning Widget */}
-        <div className="wall-qr-widget flex items-center gap-3 bg-black/90 backdrop-blur-xl rounded-2xl p-2 sm:p-2.5 pr-3.5 shadow-[0_4px_35px_rgba(229,184,66,0.4)] border border-[#e5b842] shrink-0">
+        <div className="wall-qr-widget flex items-center gap-2.5 bg-black/75 backdrop-blur-xl rounded-2xl p-1.5 sm:p-2 pr-3 shadow-[0_4px_28px_rgba(229,184,66,0.25)] border border-[#e5b842]/70 shrink-0">
           {/* Yellow QR with Radar Glow */}
           <div className="relative shrink-0">
             <div className="absolute -inset-1 rounded-xl bg-[#e5b842]/30 blur-md animate-pulse pointer-events-none" />
@@ -453,10 +456,10 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
               <img
                 src={qrCodeDataUrl}
                 alt="Scan to join live screen"
-                className="relative z-10 w-[58px] h-[58px] sm:w-[66px] sm:h-[66px] rounded-xl shadow-md bg-[#e5b842] p-0.5 border border-black/30"
+                className="relative z-10 w-[52px] h-[52px] sm:w-[58px] sm:h-[58px] rounded-xl shadow-md bg-[#e5b842] p-0.5 border border-black/30"
               />
             ) : (
-              <div className="relative z-10 w-[58px] h-[58px] sm:w-[66px] sm:h-[66px] rounded-xl bg-[#e5b842] flex items-center justify-center">
+              <div className="relative z-10 w-[52px] h-[52px] sm:w-[58px] sm:h-[58px] rounded-xl bg-[#e5b842] flex items-center justify-center">
                 <QrCode className="w-7 h-7 text-black" />
               </div>
             )}
@@ -479,9 +482,6 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
           </div>
         </div>
       </header>
-
-      {/* Broadcast News Flash Overlay (Triggered on VIP Submissions) */}
-      <BroadcastNewsFlash submission={featuredSub} venue={venue} onComplete={() => setFeaturedSub(null)} />
 
       {/* MAIN WALL STAGE: Centered Portrait + Smooth Cross-Fade Transitions */}
       <main className="wall-main flex-1 w-full h-full flex flex-col justify-center items-center relative overflow-hidden py-2 px-4">
@@ -512,9 +512,9 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
         ) : (
           /* ACTIVE PHOTO STAGE WITH SMOOTH CROSS-FADE */
           <div className="wall-stage w-full h-full flex items-center justify-center relative overflow-hidden">
-            {/* 1. SPOTLIGHT SOLO HERO MODE: Matching Image Layout */}
+            {/* 1. SPOTLIGHT SOLO HERO MODE: image-first wide TV composition */}
             {layoutMode === 'spotlight' && activeSubmission && (
-              <div className="w-full h-full max-w-7xl mx-auto flex items-center justify-center relative">
+              <div className="spotlight-hero w-full h-full max-w-[1500px] mx-auto flex items-center justify-center relative">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeSubmission.id}
@@ -522,99 +522,85 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
                     animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, scale: 1.04, filter: 'blur(8px)' }}
                     transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full h-full flex flex-col md:flex-row items-center justify-center gap-6 sm:gap-12 relative"
+                    className="spotlight-hero-inner w-full h-full flex items-center justify-center gap-3 sm:gap-5 lg:gap-7 relative"
                   >
-                    {/* Ambient Radial Spotlight Halo */}
+                    {/* Same-photo ambient fill gives portrait photos a branded stage without cropping faces. */}
                     <div
-                      className="spotlight-backdrop"
+                      className="spotlight-backdrop rounded-[28px]"
                       style={{ backgroundImage: `url(${activeSubmission.image_url})` }}
                     />
 
-                    {/* Left Center: The Photo Portrait with Golden Floating Nameplate */}
-                    {(() => {
-                      const isPngCutout =
-                        activeSubmission.image_url?.startsWith('data:image/png') ||
-                        activeSubmission.image_url?.includes('.png');
-                      return (
-                        <div className="relative flex flex-col items-center justify-center max-h-[calc(100vh-230px)] z-10">
-                          <div
-                            className={`relative ${
-                              isPngCutout
-                                ? 'overflow-visible filter drop-shadow-[0_15px_35px_rgba(229,184,66,0.35)]'
-                                : 'rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(229,184,66,0.3)] border border-[#e5b842]/40 bg-black/60'
-                            }`}
-                          >
-                            <img
-                              src={activeSubmission.image_url}
-                              alt={activeSubmission.first_name}
-                              className={`max-h-[calc(100vh-250px)] max-w-[85vw] md:max-w-[42vw] object-contain ${
-                                isPngCutout ? '' : 'rounded-3xl'
-                              } cursor-pointer hover:scale-[1.02] transition-transform duration-500`}
-                              onClick={() => setCurrentIndex((prev) => (prev + 1) % submissions.length)}
-                            />
-                          </div>
+                    {/* Slim side rails frame the hero image and keep the photo queue visible. */}
+                    <div className="spotlight-thumb-rail spotlight-thumb-rail-left" aria-label="Previous guest photos">
+                      {heroRailItems.left.map((submission) => (
+                        <button
+                          type="button"
+                          key={`left-${submission.id}`}
+                          onClick={() => {
+                            setFeaturedSub(null);
+                            setCurrentIndex(submissions.findIndex((item) => item.id === submission.id));
+                          }}
+                          className="spotlight-thumb"
+                          aria-label={`Show ${submission.first_name || 'VIP guest'}`}
+                        >
+                          <img src={submission.image_url} alt="" />
+                        </button>
+                      ))}
+                    </div>
 
-                          {/* Floating Gold Pill Nameplate with Crown (Exact match to image) */}
-                          <div className="relative -mt-4 z-20 flex flex-col items-center">
-                            <span className="text-xs text-[#e5b842] leading-none mb-0.5 drop-shadow">👑</span>
-                            <div className="bg-black/95 border-2 border-[#e5b842] text-[#e5b842] px-6 py-1 rounded-full font-black text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(229,184,66,0.6)] backdrop-blur-md">
-                              {activeSubmission.first_name ? activeSubmission.first_name.toUpperCase() : 'VIP GUEST'}
-                            </div>
-                          </div>
+                    <div className={`spotlight-hero-media spotlight-hero-media-${heroOrientation}`}>
+                      <img
+                        src={activeSubmission.image_url}
+                        alt={activeSubmission.first_name || 'VIP guest'}
+                        onLoad={(event) => {
+                          const { naturalWidth, naturalHeight } = event.currentTarget;
+                          setHeroOrientation(
+                            naturalHeight > naturalWidth * 1.08
+                              ? 'portrait'
+                              : naturalWidth > naturalHeight * 1.08
+                              ? 'landscape'
+                              : 'square'
+                          );
+                        }}
+                        className="spotlight-hero-image cursor-pointer"
+                        onClick={() => setCurrentIndex((prev) => (prev + 1) % submissions.length)}
+                      />
+
+                      <div className="spotlight-hero-copy">
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <span className="spotlight-hero-name">
+                            {activeSubmission.first_name ? activeSubmission.first_name.toUpperCase() : 'VIP GUEST'}
+                          </span>
+                          {(activeSubmission.featured || featuredSub?.id === activeSubmission.id) && (
+                            <span className="spotlight-featured-pill">FEATURED VIP</span>
+                          )}
                         </div>
-                      );
-                    })()}
-
-                    {/* Right Center: VIP Occasion Greeting Card (Exact match to screenshot) */}
-                    <div className="flex flex-col items-center text-center z-10 max-w-md px-4 py-2">
-                      {/* Crown */}
-                      <div className="text-3xl text-[#e5b842] mb-1 drop-shadow-[0_0_15px_rgba(229,184,66,0.6)]">
-                        👑
+                        <p className="spotlight-hero-message">
+                          {activeSubmission.occasion?.type === 'birthday'
+                            ? `Happy Birthday${activeSubmission.occasion.birthdayName ? `, ${activeSubmission.occasion.birthdayName}` : ''} — ${activeSubmission.caption || 'raise a glass and sing out loud'}`
+                            : activeSubmission.caption || 'Taking the spotlight at London Karaoke Club'}
+                        </p>
+                        {activeSubmission.reward && (
+                          <span className="spotlight-reward-pill">🎁 {activeSubmission.reward.title} unlocked</span>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Calligraphy Cursive Title */}
-                      <div className="font-cursive text-4xl sm:text-5xl lg:text-6xl text-[#f4d58d] drop-shadow-[0_2px_12px_rgba(229,184,66,0.4)] leading-tight tracking-wide">
-                        {activeSubmission.occasion?.type === 'birthday'
-                          ? 'Happy Birthday'
-                          : activeSubmission.occasion?.type === 'hen'
-                          ? 'Hen Party Queen'
-                          : activeSubmission.occasion?.type === 'stag'
-                          ? 'Stag Party Legend'
-                          : activeSubmission.occasion?.type === 'work'
-                          ? 'Star of the Night'
-                          : 'Star of the Night'}
-                      </div>
-
-                      {/* Bold Golden Name */}
-                      <div className="text-3xl sm:text-5xl font-black text-[#e5b842] tracking-wider uppercase mt-1 mb-2 drop-shadow-[0_2px_20px_rgba(229,184,66,0.5)]">
-                        {activeSubmission.first_name ? activeSubmission.first_name.toUpperCase() : 'VIP GUEST'}
-                      </div>
-
-                      {/* Golden Star Divider */}
-                      <div className="flex items-center gap-3 w-56 my-2 text-[#e5b842]">
-                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#e5b842] to-transparent" />
-                        <span className="text-xs">★</span>
-                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#e5b842] to-transparent" />
-                      </div>
-
-                      {/* Occasion Subtitle */}
-                      <div className="text-xs sm:text-sm font-black text-white/95 tracking-widest uppercase mt-1">
-                        {activeSubmission.caption || 'THANK YOU FOR CELEBRATING WITH US!'}
-                      </div>
-
-                      {/* Golden Heart Divider */}
-                      <div className="flex items-center gap-3 w-40 mt-3 text-[#e5b842]">
-                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#e5b842] to-transparent" />
-                        <span className="text-xs">💛</span>
-                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#e5b842] to-transparent" />
-                      </div>
-
-                      {/* Unlocked Reward Pill if exists */}
-                      {activeSubmission.reward && (
-                        <div className="mt-4 inline-flex items-center gap-1.5 bg-[#e5b842] text-black font-black text-xs uppercase px-4 py-1 rounded-full shadow-[0_0_15px_rgba(229,184,66,0.6)]">
-                          <span>🎁 {activeSubmission.reward.title} UNLOCKED</span>
-                        </div>
-                      )}
+                    <div className="spotlight-thumb-rail spotlight-thumb-rail-right" aria-label="Next guest photos">
+                      {heroRailItems.right.map((submission) => (
+                        <button
+                          type="button"
+                          key={`right-${submission.id}`}
+                          onClick={() => {
+                            setFeaturedSub(null);
+                            setCurrentIndex(submissions.findIndex((item) => item.id === submission.id));
+                          }}
+                          className="spotlight-thumb"
+                          aria-label={`Show ${submission.first_name || 'VIP guest'}`}
+                        >
+                          <img src={submission.image_url} alt="" />
+                        </button>
+                      ))}
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -907,93 +893,31 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
           </div>
         )}
 
-        {/* BOTTOM FILMSTRIP OF THUMBNAILS (Exact match to screenshot) */}
-        {submissions.length > 0 && layoutMode === 'spotlight' && (
-          <div className="wall-filmstrip relative z-30 w-full max-w-7xl mx-auto mt-auto pt-1 flex flex-col">
-            {/* Header Tab with Gold Border & Star */}
-            <div className="flex items-center justify-between">
-              <div className="inline-flex items-center gap-1.5 bg-black/90 border-t border-l border-r border-[#e5b842] text-[#e5b842] font-black text-xs uppercase px-4 py-1 rounded-t-xl tracking-wider shadow-md">
-                <span>★</span>
-                <span>TONIGHT'S WALL OF FAME ({submissions.length} PHOTOS)</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-mono pr-2">
-                <span>{currentIndex + 1}</span>
-                <span>/</span>
-                <span>{submissions.length}</span>
-              </div>
-            </div>
-
-            {/* Filmstrip Row Container with Top Gold Border */}
-            <div className="w-full bg-black/85 border-t border-[#e5b842]/70 backdrop-blur-md px-3 py-2 flex items-center gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-[#e5b842]/40 rounded-b-xl">
-              {submissions.map((sub, idx) => {
-                const isActive = (featuredSub && sub.id === featuredSub.id) || (!featuredSub && idx === currentIndex);
-                return (
-                  <button
-                    key={sub.id}
-                    onClick={() => {
-                      setFeaturedSub(null);
-                      setCurrentIndex(idx);
-                    }}
-                    className={`relative flex-shrink-0 group overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
-                      isActive
-                        ? 'ring-2 ring-[#e5b842] shadow-[0_0_18px_rgba(229,184,66,0.7)] scale-105 z-10'
-                        : 'border border-white/20 hover:border-white/60 opacity-75 hover:opacity-100'
-                    }`}
-                  >
-                    <div className="relative h-14 w-20 sm:h-16 sm:w-24 overflow-hidden bg-black flex items-center justify-center rounded-xl">
-                      <img
-                        src={sub.image_url}
-                        alt={sub.first_name}
-                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-
-                      {isActive && (
-                        <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-[#e5b842] text-black font-black text-[8px] px-1.5 py-0.2 rounded-full uppercase tracking-wider shadow whitespace-nowrap">
-                          NOW ON TV
-                        </div>
-                      )}
-
-                      <div className="absolute bottom-1 left-1 right-1 text-center">
-                        <div className="text-[10px] font-bold text-white truncate drop-shadow">
-                          {sub.first_name || 'VIP Guest'}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </main>
 
-      {/* BOTTOM NEWS FLASH TICKER BANNER (Exact match to screenshot) */}
+      {/* BOTTOM LIVE FROM SOHO TICKER STRIP */}
       <footer className="wall-ticker relative z-30 h-[34px] min-h-[34px] max-h-[34px] bg-black/95 border-t border-[#e5b842] px-3 overflow-hidden flex items-center justify-between shadow-[0_-4px_25px_rgba(0,0,0,0.9)]">
-        {/* Newsflash Gold Button */}
+        {/* Rotating Soho strip keeps a live pulse without a competing headline card. */}
         <div className="flex items-center gap-1.5 bg-[#e5b842] text-black px-3 py-1 rounded-md font-black text-[11px] uppercase tracking-widest shrink-0 shadow-md z-10 mr-4">
           <Zap className="w-3.5 h-3.5 fill-black" />
-          <span>NEWS FLASH</span>
+          <span>LIVE FROM SOHO</span>
         </div>
 
         {/* Marquee Scrolling Ticker Text */}
         <div className="whitespace-nowrap flex items-center gap-8 animate-[marquee_24s_linear_infinite] text-xs font-black text-[#e5b842] tracking-widest uppercase flex-1 leading-none drop-shadow">
+          <span>• {liveRailMessages[liveRailIndex]}</span>
+          <span className="text-zinc-400">•</span>
           <span>• SCAN QR CODE ON SCREEN TO SEND YOUR SELFIE LIVE TO THIS TV</span>
           <span className="text-zinc-400">•</span>
           <span>• TAG @LONDONKARAOKECLUB ON INSTAGRAM FOR COMPLIMENTARY SHOTS</span>
-          <span className="text-zinc-400">•</span>
-          <span>★ STAR OF THE NIGHT SELECTED EVERY 30 MINS!</span>
           <span className="text-zinc-400">•</span>
           <span>⚡ {venue.wall_ticker_text || venue.live_ticker_message || 'LIVE STAGE SHOWCASE'}</span>
           <span className="text-zinc-400">•</span>
+          <span>• {liveRailMessages[liveRailIndex]}</span>
+          <span className="text-zinc-400">•</span>
           <span>• SCAN QR CODE ON SCREEN TO SEND YOUR SELFIE LIVE TO THIS TV</span>
-          <span className="text-zinc-400">•</span>
-          <span>• TAG @LONDONKARAOKECLUB ON INSTAGRAM FOR COMPLIMENTARY SHOTS</span>
-          <span className="text-zinc-400">•</span>
-          <span>★ STAR OF THE NIGHT SELECTED EVERY 30 MINS!</span>
         </div>
       </footer>
     </div>
   );
 };
-

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Zap, Flame, Radio, Star, PartyPopper, Trophy } from 'lucide-react';
+import { Sparkles, Zap, Flame, Radio, Star, Trophy } from 'lucide-react';
 import { Submission, Venue } from '../types';
 
 interface BroadcastNewsFlashProps {
@@ -38,10 +38,10 @@ export const BroadcastNewsFlash: React.FC<BroadcastNewsFlashProps> = ({
 
     if (occasion === 'birthday') {
       list.push({
-        badge: 'BIRTHDAY FLASH',
+        badge: 'LIVE ON STAGE',
         badgeColor: 'from-yellow-400 via-amber-500 to-orange-500',
-        icon: <PartyPopper className="w-3.5 h-3.5 text-black" />,
-        text: `CELEBRATING ${name}'S BIRTHDAY TONIGHT AT ${venue?.sub_name || 'LKC'}`,
+        icon: <Sparkles className="w-3.5 h-3.5 text-black" />,
+        text: `NOW IN THE SPOTLIGHT: ${name}`,
         subtext: submission.caption || 'RAISE A GLASS & SING OUT LOUD',
       });
     } else if (occasion === 'hen') {
@@ -76,7 +76,7 @@ export const BroadcastNewsFlash: React.FC<BroadcastNewsFlashProps> = ({
       badgeColor: 'from-emerald-400 to-teal-500',
       icon: <Radio className="w-3.5 h-3.5 text-black animate-pulse" />,
       text: `SCAN QR ON SCREEN TO BROADCAST YOUR SELFIE LIVE`,
-      subtext: 'LONDON KARAOKE CLUB • REAL-TIME WALL OF FAME',
+      subtext: 'LONDON KARAOKE CLUB • REAL-TIME VIP BROADCAST',
     });
 
     return list;

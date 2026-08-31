@@ -10,6 +10,7 @@ import { CameraCapture } from './components/CameraCapture';
 import { WallDisplay } from './components/WallDisplay';
 import { AdminDashboard } from './components/AdminDashboard';
 import { CommercialVenueSection } from './components/CommercialVenueSection';
+import { LondonKaraokeLogo } from './components/LondonKaraokeLogo';
 import { Camera, Tv, ShieldCheck, Sparkles, Building2 } from 'lucide-react';
 
 export default function App() {
@@ -131,10 +132,10 @@ export default function App() {
           {/* Brand Logo */}
           <button
             onClick={() => navigateToView('guest')}
-            className="flex items-center gap-2 group text-left"
+            className="flex items-center gap-2.5 group text-left"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#e5b842] to-amber-500 text-black font-black text-sm shadow-md group-hover:scale-105 transition-transform">
-              SS
+            <div className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden shadow-md group-hover:scale-105 transition-transform shrink-0">
+              <LondonKaraokeLogo className="w-9 h-9" />
             </div>
             <div>
               <div className="font-extrabold text-sm tracking-wider text-[#e5b842] uppercase leading-none">

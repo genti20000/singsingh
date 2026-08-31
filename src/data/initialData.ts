@@ -4,13 +4,14 @@ export const INITIAL_VENUE: Venue = {
   id: 'london-karaoke-club',
   name: 'SINGSHOT',
   sub_name: 'at London Karaoke Club',
-  logo_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=200&q=80',
+  logo_url: '/lkc_logo.svg',
   primary_color: '#e5b842', // Metallic gold
   accent_color: '#f59e0b',
   active_event_id: 'evt-friday-night',
   wall_ticker_text: '🎤 SINGSHOT LIVE AT LONDON KARAOKE CLUB • SCAN QR TO SEE YOURSELF ON THE BIG SCREEN • TAG @LONDONKARAOKECLUB ON INSTAGRAM',
   auto_approve: false,
   qr_shape: 'squircle',
+  wall_layout_mode: 'spotlight',
 };
 
 export const INITIAL_EVENTS: EventSession[] = [

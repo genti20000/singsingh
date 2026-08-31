@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Submission, EventSession, Reward, Venue, QRShape } from '../types';
+import { Submission, EventSession, Reward, Venue, QRShape, WallLayoutMode } from '../types';
 import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
+import { LondonKaraokeLogo } from './LondonKaraokeLogo';
 import { DataService, subscribeToSync } from '../services/dataService';
 import { INITIAL_EVENTS, INITIAL_REWARDS } from '../data/initialData';
 import {
@@ -18,6 +19,12 @@ import {
   Shapes,
   Radio,
   BellRing,
+  Square,
+  LayoutGrid,
+  Columns3,
+  Columns2,
+  GalleryHorizontal,
+  MonitorPlay,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -37,7 +44,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const [newSubmissionsAlert, setNewSubmissionsAlert] = useState<string | null>(null);
+  const [currentLayoutMode, setCurrentLayoutMode] = useState<WallLayoutMode>(
+    venue.wall_layout_mode || 'spotlight'
+  );
   const prevCountRef = useRef<number>(0);
+
+  const WALL_LAYOUT_OPTIONS: {
+    id: WallLayoutMode;
+    label: string;
+    subLabel: string;
+    badge: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[] = [
+    { id: 'spotlight', label: 'Spotlight', subLabel: 'Solo Hero', badge: '1 Photo', icon: Square },
+    { id: 'quad', label: 'Quad', subLabel: '2x2 Grid', badge: '4 Photos', icon: LayoutGrid },
+    { id: 'mosaic', label: 'Mosaic', subLabel: 'Masonry Wall', badge: '5 Photos', icon: Columns3 },
+    { id: 'duet', label: 'Duet', subLabel: 'Side-by-Side', badge: '2 Photos', icon: Columns2 },
+    { id: 'carousel', label: 'Carousel', subLabel: 'Flow Deck', badge: '3D Carousel', icon: GalleryHorizontal },
+  ];
+
+  // Keep current layout mode in sync with props
+  useEffect(() => {
+    if (venue.wall_layout_mode && venue.wall_layout_mode !== currentLayoutMode) {
+      setCurrentLayoutMode(venue.wall_layout_mode);
+    }
+  }, [venue.wall_layout_mode, currentLayoutMode]);
 
   // Modal states
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -105,6 +136,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       ) {
         fetchData(false);
       }
+      if (event.type === 'VENUE_UPDATED' && (event.data as Venue)?.wall_layout_mode) {
+        setCurrentLayoutMode((event.data as Venue).wall_layout_mode!);
+      }
+      if (event.type === 'WALL_LAYOUT_CHANGED' && (event.data as { mode?: WallLayoutMode })?.mode) {
+        setCurrentLayoutMode((event.data as { mode: WallLayoutMode }).mode);
+      }
     });
 
     return () => {
@@ -112,6 +149,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       unsubscribe();
     };
   }, [fetchData]);
+
+  const handleSetLayoutMode = async (mode: WallLayoutMode) => {
+    setCurrentLayoutMode(mode);
+    try {
+      await DataService.updateVenue({ wall_layout_mode: mode });
+      onUpdateVenue({ wall_layout_mode: mode });
+    } catch (err) {
+      console.error('Failed to change wall layout mode:', err);
+    }
+  };
 
   // Staff Moderation Actions
   const handleApprove = async (id: string) => {
@@ -210,33 +257,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     <div className="min-h-screen bg-zinc-950 text-white p-4 sm:p-6 pb-20 select-none">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Top Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-zinc-900/90 border border-white/10 p-4 sm:p-5 rounded-3xl shadow-xl">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-[#e5b842] text-sm uppercase tracking-widest bg-[#e5b842]/10 px-3 py-1 rounded-full border border-[#e5b842]/30">
-                Staff Dashboard
-              </span>
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>Live Auto-Sync</span>
-              </span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-zinc-950/90 border border-[#e5b842]/30 p-4 sm:p-6 rounded-3xl shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+          <div className="flex items-center gap-3.5">
+            <div className="h-12 w-12 rounded-full overflow-hidden shadow-lg border border-[#e5b842]/50 shrink-0">
+              <LondonKaraokeLogo className="w-12 h-12" />
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold mt-1 text-white">
-              Moderation Queue
-            </h1>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-[#e5b842] text-xs uppercase tracking-widest bg-[#e5b842]/15 px-3 py-0.5 rounded-full border border-[#e5b842]/40">
+                  Staff Control Deck
+                </span>
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>Realtime Sync</span>
+                </span>
+              </div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-black mt-1 text-white">
+                Live Photo Moderation
+              </h1>
+            </div>
           </div>
 
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowEventModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:bg-zinc-700 transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:bg-zinc-700 transition-colors cursor-pointer"
             >
               <Calendar className="w-4 h-4 text-[#e5b842]" /> Event Session
             </button>
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:bg-zinc-700 transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-zinc-800 text-xs font-semibold text-zinc-200 hover:text-white hover:bg-zinc-700 transition-colors cursor-pointer"
             >
               <Settings className="w-4 h-4 text-[#e5b842]" /> Venue Config
             </button>
@@ -244,10 +296,92 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               href="/wall"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#e5b842] text-black font-extrabold text-xs shadow-md hover:bg-amber-400 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#e5b842] text-black font-extrabold text-xs shadow-md hover:bg-amber-400 transition-colors cursor-pointer"
             >
               <Tv className="w-4 h-4" /> Open Wall Screen
             </a>
+          </div>
+        </div>
+
+        {/* Wall Display Remote Layout Controls Bar */}
+        <div className="bg-zinc-950/95 border border-[#e5b842]/40 p-4 sm:p-5 rounded-3xl shadow-[0_0_30px_rgba(229,184,66,0.15)] backdrop-blur-xl space-y-3.5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-2xl bg-[#e5b842]/15 border border-[#e5b842]/50 flex items-center justify-center text-[#e5b842] shadow-md shrink-0">
+                <MonitorPlay className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-extrabold text-sm sm:text-base text-white tracking-wide">
+                    Wall Display Controls
+                  </h2>
+                  <span className="flex items-center gap-1 text-[10px] font-black text-[#e5b842] bg-[#e5b842]/20 border border-[#e5b842]/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#e5b842] animate-ping" />
+                    <span>Live Remote</span>
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Remotely switch the live screen layout mode across venue displays
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-zinc-400 font-medium">Active on Screen:</span>
+              <span className="bg-[#e5b842] text-black font-black px-3 py-1 rounded-xl text-xs uppercase tracking-wider shadow-md">
+                {WALL_LAYOUT_OPTIONS.find((o) => o.id === currentLayoutMode)?.label || 'Spotlight'}
+              </span>
+            </div>
+          </div>
+
+          {/* Remote Mode Switcher Toggle Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+            {WALL_LAYOUT_OPTIONS.map((layout) => {
+              const Icon = layout.icon;
+              const isActive = currentLayoutMode === layout.id;
+              return (
+                <button
+                  key={layout.id}
+                  id={`admin-layout-${layout.id}`}
+                  onClick={() => handleSetLayoutMode(layout.id)}
+                  className={`relative p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2.5 group ${
+                    isActive
+                      ? 'bg-[#e5b842] text-black border-[#e5b842] shadow-[0_0_20px_rgba(229,184,66,0.35)] scale-[1.02] ring-2 ring-[#e5b842]/50'
+                      : 'bg-zinc-900/90 text-zinc-300 border-white/10 hover:border-white/30 hover:bg-zinc-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={`p-2 rounded-xl transition-colors ${
+                        isActive
+                          ? 'bg-black text-[#e5b842]'
+                          : 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    {isActive ? (
+                      <span className="flex items-center gap-1 bg-black text-[#e5b842] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" /> LIVE
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold text-zinc-500 group-hover:text-zinc-400 uppercase tracking-wider">
+                        {layout.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className={`font-black text-sm leading-tight ${isActive ? 'text-black' : 'text-white'}`}>
+                      {layout.label}
+                    </div>
+                    <div className={`text-[11px] font-medium leading-tight mt-0.5 ${isActive ? 'text-black/80' : 'text-zinc-400'}`}>
+                      {layout.subLabel}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -414,7 +548,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div className="text-xs text-[#e5b842] font-semibold mt-0.5 uppercase tracking-wide">
-                      {item.occasion.type} • {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {item.occasion?.type || 'Standard'} • {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
 
                     {item.caption && (

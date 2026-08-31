@@ -4,6 +4,7 @@ import { ParticleCanvas } from './ParticleCanvas';
 import { FrameOverlay } from './FrameOverlay';
 import { Submission, Venue } from '../types';
 import { Crown, Sparkles, PartyPopper, Heart, Building2, Gift } from 'lucide-react';
+import { LondonKaraokeLogo } from './LondonKaraokeLogo';
 
 interface BrandedCardProps {
   submission: Submission;
@@ -103,8 +104,8 @@ export const BrandedCard: React.FC<BrandedCardProps> = ({
       {/* Top Header: Venue Branding & Occasion Badge */}
       <div className="relative z-20 flex items-center justify-between gap-2 border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#e5b842] text-black font-black text-xs shadow-md">
-            SS
+          <div className="flex h-7 w-7 items-center justify-center rounded-full overflow-hidden border border-[#e5b842]/60 shadow-md shrink-0">
+            <LondonKaraokeLogo className="w-7 h-7" />
           </div>
           <div>
             <div className="text-[10px] sm:text-xs font-black tracking-widest text-[#e5b842] uppercase">

@@ -56,6 +56,8 @@ export interface Submission {
   claimed?: boolean;
 }
 
+export type WallLayoutMode = 'spotlight' | 'quad' | 'mosaic' | 'duet' | 'carousel';
+
 export interface Venue {
   id: string;
   name: string;
@@ -68,6 +70,7 @@ export interface Venue {
   wall_ticker_text: string;
   auto_approve?: boolean;
   qr_shape?: QRShape;
+  wall_layout_mode?: WallLayoutMode;
 }
 
 export interface EventSession {

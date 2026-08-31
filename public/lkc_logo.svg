@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Halftone / perforated dot pattern -->
+    <pattern id="dotPattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="0.75" fill="#000000" opacity="0.3" />
+    </pattern>
+    <radialGradient id="badgeYellow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#fed11a" />
+      <stop offset="70%" stop-color="#f8be0e" />
+      <stop offset="100%" stop-color="#e2a806" />
+    </radialGradient>
+    <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Outer Ring Shadow & Base -->
+  <circle cx="256" cy="256" r="246" fill="#111111" />
+  
+  <!-- Yellow Background Circle -->
+  <circle cx="256" cy="256" r="232" fill="url(#badgeYellow)" stroke="#111111" stroke-width="12" />
+  
+  <!-- Dot Pattern Overlay -->
+  <circle cx="256" cy="256" r="226" fill="url(#dotPattern)" />
+  
+  <!-- Typography & Icons Group -->
+  <g fill="#0a0a0a" text-anchor="middle" font-family="system-ui, -apple-system, 'Impact', 'Arial Black', sans-serif" font-weight="900">
+    <!-- LONDON -->
+    <text x="256" y="156" font-size="52" letter-spacing="4" font-stretch="condensed">LONDON</text>
+    
+    <!-- KARAOKE -->
+    <text x="256" y="244" font-size="62" letter-spacing="3" font-stretch="condensed">KARAOKE</text>
+    
+    <!-- ★ CLUB ★ -->
+    <!-- Left Star -->
+    <path d="M 108 278 L 115 293 L 131 295 L 119 306 L 122 322 L 108 314 L 94 322 L 97 306 L 85 295 L 101 293 Z" fill="#0a0a0a" />
+    
+    <!-- CLUB Text -->
+    <text x="256" y="316" font-size="56" letter-spacing="4" font-stretch="condensed">CLUB</text>
+    
+    <!-- Right Star -->
+    <path d="M 404 278 L 411 293 L 427 295 L 415 306 L 418 322 L 404 314 L 390 322 L 393 306 L 381 295 L 397 293 Z" fill="#0a0a0a" />
+    
+    <!-- Lower Left Star -->
+    <path d="M 158 358 L 163 369 L 175 370 L 166 379 L 168 391 L 158 385 L 148 391 L 150 379 L 141 370 L 153 369 Z" fill="#0a0a0a" />
+    
+    <!-- Lower Right Star -->
+    <path d="M 354 358 L 359 369 L 371 370 L 362 379 L 364 391 L 354 385 L 344 391 L 346 379 L 337 370 L 349 369 Z" fill="#0a0a0a" />
+    
+    <!-- Vintage Microphone Vector Icon -->
+    <g transform="translate(256, 375)">
+      <!-- Mic Capsule Body -->
+      <rect x="-30" y="-38" width="60" height="52" rx="30" ry="26" fill="#0a0a0a" />
+      
+      <!-- Mic Grill Horizontal Slits -->
+      <line x1="-24" y1="-26" x2="24" y2="-26" stroke="#f8be0e" stroke-width="4" stroke-linecap="round" />
+      <line x1="-27" y1="-14" x2="27" y2="-14" stroke="#f8be0e" stroke-width="4" stroke-linecap="round" />
+      <line x1="-27" y1="-2" x2="27" y2="-2" stroke="#f8be0e" stroke-width="4" stroke-linecap="round" />
+      <line x1="-24" y1="10" x2="24" y2="10" stroke="#f8be0e" stroke-width="4" stroke-linecap="round" />
+      
+      <!-- Mic Outer Cradle / U-mount -->
+      <path d="M -38 -8 C -38 28 38 28 38 -8" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" />
+      
+      <!-- Mic Stand Stem -->
+      <rect x="-5" y="24" width="10" height="30" fill="#0a0a0a" />
+      
+      <!-- Mic Stand Base -->
+      <rect x="-26" y="50" width="52" height="10" rx="3" fill="#0a0a0a" />
+    </g>
+  </g>
+</svg>

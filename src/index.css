@@ -13,6 +13,33 @@
   animation: marquee 25s linear infinite;
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(229, 184, 66, 0.3), 0 0 50px rgba(229, 184, 66, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(229, 184, 66, 0.55), 0 0 80px rgba(229, 184, 66, 0.25);
+  }
+}
+
+@keyframes newsTickerFlash {
+  0%, 100% {
+    background-color: rgba(229, 184, 66, 0.15);
+  }
+  50% {
+    background-color: rgba(229, 184, 66, 0.35);
+  }
+}
+
 @keyframes fadeSlideUp {
   0% {
     opacity: 0;
@@ -54,6 +81,10 @@
   animation: scaleFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
 html,
 body,
 #root {
@@ -73,23 +104,27 @@ body {
 }
 
 .spotlight-stage {
-  height: calc(100vh - 64px - 100px - 28px);
-  height: calc(100dvh - 64px - 100px - 28px);
+  height: calc(100vh - 100px - 30px);
+  height: calc(100dvh - 100px - 30px);
   display: grid;
   place-items: center;
-  padding: 6px 2vw;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  padding: 4px 1vw;
   position: relative;
   overflow: hidden;
   width: 100%;
 }
 
 .spotlight-photo-wrap {
+  grid-area: 1 / 1 / 2 / 2;
   position: relative;
   height: 100%;
   width: 100%;
-  max-width: 94vw;
+  max-width: 96vw;
   display: grid;
   place-items: center;
+  will-change: opacity, transform, filter;
 }
 
 .spotlight-backdrop {
@@ -106,13 +141,15 @@ body {
 .spotlight-photo {
   height: 100%;
   width: auto;
-  max-width: 92vw;
+  max-width: 95vw;
+  max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   object-fit: contain;
-  border-radius: 26px;
+  border-radius: 24px;
   box-shadow:
-    0 0 0 2px rgba(244, 193, 61, 0.75),
-    0 0 40px rgba(244, 193, 61, 0.28),
-    0 24px 80px rgba(0, 0, 0, 0.7);
+    0 0 0 2px rgba(244, 193, 61, 0.8),
+    0 0 45px rgba(244, 193, 61, 0.32),
+    0 24px 80px rgba(0, 0, 0, 0.75);
   position: relative;
   z-index: 1;
 }

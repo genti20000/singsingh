@@ -46,9 +46,9 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
   const [liveRailIndex, setLiveRailIndex] = useState(0);
 
   const liveRailMessages = [
-    'Soho’s favourite voices are taking the spotlight',
-    'Scan the screen to join tonight’s VIP broadcast',
-    'Raise a glass, hit the chorus, own the room',
+    'Scan QR to join SingShot Live',
+    'No app download. Just your Soho moment.',
+    'Choose a VIP frame and hit the big screen',
   ];
 
   // Ref tracking previous submission IDs to detect new arrivals without flickering
@@ -279,16 +279,6 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     setHeroOrientation('landscape');
   }, [activeSubmission?.id]);
 
-  const heroRailItems = useMemo(() => {
-    if (!activeSubmission || submissions.length < 2) return { left: [] as Submission[], right: [] as Submission[] };
-    const activeIdx = Math.max(0, submissions.findIndex((submission) => submission.id === activeSubmission.id));
-    const itemAt = (offset: number) => submissions[(activeIdx + offset + submissions.length) % submissions.length];
-    return {
-      left: [itemAt(-1), itemAt(-2), itemAt(-3)].filter((submission, index, list) => submission && list.findIndex((item) => item.id === submission.id) === index),
-      right: [itemAt(1), itemAt(2), itemAt(3)].filter((submission, index, list) => submission && list.findIndex((item) => item.id === submission.id) === index),
-    };
-  }, [activeSubmission, submissions]);
-
   // Quad Grid Slice (4 cards)
   const quadSubmissions = useMemo(() => {
     if (submissions.length === 0) return [];
@@ -369,13 +359,13 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
         )}
       </AnimatePresence>
 
-      {/* TOP FLOATING HUD BAR: Left Venue HUD, Center Occasion Banner & Right QR Widget */}
-      <header className="relative z-40 w-full px-4 pt-3 sm:pt-4 flex items-center justify-between gap-3">
+      {/* TOP HUD BAR: flush to the TV edge so the hero gets the maximum canvas. */}
+      <header className="relative z-40 w-full px-0 pt-0 flex items-center justify-between gap-0">
         {/* Left HUD: Branding, Live Status, Auto-Sync Pulse, Clock & Controls */}
-        <div className="flex items-center gap-2.5 bg-black/90 backdrop-blur-xl border border-[#e5b842]/70 p-2 sm:p-2.5 pr-3.5 rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)]">
+        <div className="flex items-center gap-2 bg-black/90 backdrop-blur-xl border border-[#e5b842]/70 border-t-0 p-1.5 sm:p-2 pr-3 rounded-br-2xl shadow-[0_4px_30px_rgba(0,0,0,0.85)]">
           {/* Venue Mini Logo */}
-          <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full overflow-hidden shadow-[0_0_20px_rgba(229,184,66,0.5)] shrink-0 border border-[#e5b842]/80 bg-black">
-            <LondonKaraokeLogo className="w-10 h-10 sm:w-11 sm:h-11" />
+          <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full overflow-hidden shadow-[0_0_20px_rgba(229,184,66,0.5)] shrink-0 border border-[#e5b842]/80 bg-black">
+            <LondonKaraokeLogo className="h-[58px] w-[58px]" />
           </div>
 
           <div className="flex flex-col">
@@ -427,28 +417,8 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
           </div>
         </div>
 
-        {/* Quiet rotating venue rail keeps the wall alive without competing with the hero. */}
-        <div className="live-from-soho-rail hidden lg:flex min-w-0 flex-1 items-center justify-center gap-4 mx-2 rounded-2xl border border-white/10 bg-black/55 px-5 py-2.5 backdrop-blur-xl">
-          <div className="flex items-center gap-2 shrink-0 text-[#e5b842]">
-            <Radio className="w-4 h-4 animate-pulse" />
-            <span className="text-xs font-black uppercase tracking-[0.22em]">Live from Soho</span>
-          </div>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={liveRailIndex}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
-              className="min-w-0 truncate text-center text-xs font-semibold tracking-wide text-zinc-300"
-            >
-              {liveRailMessages[liveRailIndex]}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-
         {/* Right HUD: QR Code Scanning Widget */}
-        <div className="wall-qr-widget flex items-center gap-2.5 bg-black/75 backdrop-blur-xl rounded-2xl p-1.5 sm:p-2 pr-3 shadow-[0_4px_28px_rgba(229,184,66,0.25)] border border-[#e5b842]/70 shrink-0">
+        <div className="wall-qr-widget flex items-center gap-2.5 bg-black/75 backdrop-blur-xl rounded-bl-2xl p-1.5 sm:p-2 pr-3 shadow-[0_4px_28px_rgba(229,184,66,0.25)] border border-[#e5b842]/70 border-t-0 shrink-0">
           {/* Yellow QR with Radar Glow */}
           <div className="relative shrink-0">
             <div className="absolute -inset-1 rounded-xl bg-[#e5b842]/30 blur-md animate-pulse pointer-events-none" />
@@ -530,24 +500,6 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
                       style={{ backgroundImage: `url(${activeSubmission.image_url})` }}
                     />
 
-                    {/* Slim side rails frame the hero image and keep the photo queue visible. */}
-                    <div className="spotlight-thumb-rail spotlight-thumb-rail-left" aria-label="Previous guest photos">
-                      {heroRailItems.left.map((submission) => (
-                        <button
-                          type="button"
-                          key={`left-${submission.id}`}
-                          onClick={() => {
-                            setFeaturedSub(null);
-                            setCurrentIndex(submissions.findIndex((item) => item.id === submission.id));
-                          }}
-                          className="spotlight-thumb"
-                          aria-label={`Show ${submission.first_name || 'VIP guest'}`}
-                        >
-                          <img src={submission.image_url} alt="" />
-                        </button>
-                      ))}
-                    </div>
-
                     <div className={`spotlight-hero-media spotlight-hero-media-${heroOrientation}`}>
                       <img
                         src={activeSubmission.image_url}
@@ -586,22 +538,6 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
                       </div>
                     </div>
 
-                    <div className="spotlight-thumb-rail spotlight-thumb-rail-right" aria-label="Next guest photos">
-                      {heroRailItems.right.map((submission) => (
-                        <button
-                          type="button"
-                          key={`right-${submission.id}`}
-                          onClick={() => {
-                            setFeaturedSub(null);
-                            setCurrentIndex(submissions.findIndex((item) => item.id === submission.id));
-                          }}
-                          className="spotlight-thumb"
-                          aria-label={`Show ${submission.first_name || 'VIP guest'}`}
-                        >
-                          <img src={submission.image_url} alt="" />
-                        </button>
-                      ))}
-                    </div>
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -893,7 +829,61 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
           </div>
         )}
 
+        {/* Wall of Fame dock: a restrained bottom gallery, directly above the promo rail. */}
+        {submissions.length > 0 && layoutMode === 'spotlight' && (
+          <div className="wall-filmstrip relative z-30 w-full max-w-[1500px] mx-auto mt-auto px-2 pb-1">
+            <div className="mb-1 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#e5b842]">
+              <span>★ Wall of Fame</span>
+              <span className="text-zinc-500">{currentIndex + 1} / {submissions.length}</span>
+            </div>
+            <div className="wall-filmstrip-row flex items-center gap-2 overflow-x-auto rounded-xl border border-white/10 bg-black/65 px-2 py-1.5 backdrop-blur-md">
+              {submissions.map((submission, index) => {
+                const isActive = (!featuredSub && index === currentIndex) || featuredSub?.id === submission.id;
+                return (
+                  <button
+                    key={submission.id}
+                    type="button"
+                    onClick={() => {
+                      setFeaturedSub(null);
+                      setCurrentIndex(index);
+                    }}
+                    className={`wall-filmstrip-thumb group relative shrink-0 overflow-hidden rounded-lg border transition-all ${
+                      isActive
+                        ? 'border-[#e5b842] opacity-100 shadow-[0_0_16px_rgba(229,184,66,0.55)]'
+                        : 'border-white/15 opacity-60 hover:border-white/50 hover:opacity-100'
+                    }`}
+                    aria-label={`Show ${submission.first_name || 'VIP guest'}`}
+                  >
+                    <img src={submission.image_url} alt="" />
+                    <span className="absolute inset-x-0 bottom-0 truncate bg-black/75 px-1 py-0.5 text-[9px] font-bold text-white">
+                      {submission.first_name || 'VIP Guest'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       </main>
+
+      {/* Animated app-promotion rail sits between Wall of Fame and the yellow ticker. */}
+      <div className="live-from-soho-promo relative z-30 flex items-center justify-center gap-3 border-t border-white/10 bg-black/80 px-4 py-2 backdrop-blur-xl">
+        <Radio className="h-4 w-4 shrink-0 animate-pulse text-[#e5b842]" />
+        <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.2em] text-[#e5b842]">Live from Soho</span>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={liveRailIndex}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
+            className="truncate text-center text-xs font-semibold tracking-wide text-zinc-200"
+          >
+            {liveRailMessages[liveRailIndex]}
+          </motion.span>
+        </AnimatePresence>
+      </div>
 
       {/* BOTTOM LIVE FROM SOHO TICKER STRIP */}
       <footer className="wall-ticker relative z-30 h-[34px] min-h-[34px] max-h-[34px] bg-black/95 border-t border-[#e5b842] px-3 overflow-hidden flex items-center justify-between shadow-[0_-4px_25px_rgba(0,0,0,0.9)]">

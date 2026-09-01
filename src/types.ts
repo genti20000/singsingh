@@ -58,6 +58,26 @@ export interface Submission {
 
 export type WallLayoutMode = 'spotlight' | 'quad' | 'mosaic' | 'duet' | 'carousel';
 
+export type WallBackgroundTheme =
+  | 'soho-gold'
+  | 'cyber-neon'
+  | 'velvet-rose'
+  | 'midnight-sapphire'
+  | 'disco-fever'
+  | 'emerald-stage';
+
+export type BackgroundPresetId =
+  | 'gold-glow'
+  | 'transparent'
+  | 'soho-neon'
+  | 'disco-fever'
+  | 'rose-gold'
+  | 'red-carpet'
+  | 'cyber-stage'
+  | 'studio-dark'
+  | 'portrait-blur'
+  | 'original';
+
 export interface Venue {
   id: string;
   name: string;
@@ -71,6 +91,7 @@ export interface Venue {
   auto_approve?: boolean;
   qr_shape?: QRShape;
   wall_layout_mode?: WallLayoutMode;
+  wall_background_theme?: WallBackgroundTheme;
 }
 
 export interface EventSession {

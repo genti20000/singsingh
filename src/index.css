@@ -197,6 +197,18 @@ body {
   padding: 0;
 }
 
+.camera-viewport {
+  aspect-ratio: 4/5;
+  max-height: min(48vh, 380px);
+  width: 100%;
+}
+
+@media (max-height: 700px) {
+  .camera-viewport {
+    max-height: min(40vh, 290px);
+  }
+}
+
 .spotlight-hero-media {
   position: relative;
   z-index: 2;
@@ -717,3 +729,274 @@ body {
     height: min(820px, calc(100dvh - 260px));
   }
 }
+
+/* ==========================================================================
+   Luxury Styling System — SingShot VIP & Dynamic Gold Frame
+   ========================================================================== */
+
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-cormorant {
+  font-family: 'Cormorant Garamond', 'Playfair Display', serif;
+}
+
+/* 24K Liquid Gold Metallic Text Gradient */
+.gold-foil-text {
+  background: linear-gradient(135deg, #fff7cc 0%, #f7d154 25%, #e5b842 50%, #b48618 75%, #ffe680 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Rose Champagne Metallic Text Gradient */
+.rose-gold-text {
+  background: linear-gradient(135deg, #fff0f3 0%, #fda4af 30%, #f43f5e 60%, #e11d48 85%, #ffe4e8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Diamond Ice Metallic Text Gradient */
+.ice-foil-text {
+  background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 30%, #38bdf8 65%, #0284c7 85%, #f0f9ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Luxury Brushed Gold Border Frame */
+.gold-foil-border {
+  border-image: linear-gradient(135deg, #ffe580 0%, #e5b842 35%, #92690d 70%, #fff0a6 100%) 1;
+}
+
+/* ==========================================================================
+   DYNAMIC FRAME SYSTEM: Pulsing Gold Borders & Shifting Gradient Colors
+   ========================================================================== */
+
+@keyframes dynamicGoldGradientShift {
+  0% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  25% {
+    background-position: 50% 100%;
+    filter: hue-rotate(8deg) brightness(1.12);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: hue-rotate(-8deg) brightness(1.2);
+  }
+  75% {
+    background-position: 50% 0%;
+    filter: hue-rotate(6deg) brightness(1.1);
+  }
+  100% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg) brightness(1);
+  }
+}
+
+@keyframes dynamicGoldPulseGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 25px rgba(229, 184, 66, 0.35),
+      0 0 55px rgba(229, 184, 66, 0.15),
+      inset 0 0 15px rgba(229, 184, 66, 0.12);
+    border-color: rgba(229, 184, 66, 0.75);
+  }
+  50% {
+    box-shadow:
+      0 0 45px rgba(245, 158, 11, 0.65),
+      0 0 85px rgba(229, 184, 66, 0.4),
+      0 0 120px rgba(251, 191, 36, 0.2),
+      inset 0 0 25px rgba(255, 230, 128, 0.25);
+    border-color: rgba(255, 229, 128, 0.95);
+  }
+}
+
+@keyframes dynamicFeaturedPulseGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 35px rgba(245, 158, 11, 0.5),
+      0 0 75px rgba(229, 184, 66, 0.3),
+      0 0 130px rgba(251, 113, 133, 0.2),
+      inset 0 0 20px rgba(255, 230, 128, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 65px rgba(255, 215, 0, 0.85),
+      0 0 110px rgba(245, 158, 11, 0.6),
+      0 0 160px rgba(251, 113, 133, 0.35),
+      inset 0 0 35px rgba(255, 245, 200, 0.4);
+  }
+}
+
+@keyframes dynamicConicRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes newArrivalShimmerFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+    box-shadow: 0 0 0 0 rgba(255, 235, 130, 0.9), 0 0 80px rgba(229, 184, 66, 0.9);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.02);
+    box-shadow: 0 0 0 16px rgba(245, 158, 11, 0), 0 0 100px rgba(229, 184, 66, 0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 0 45px rgba(229, 184, 66, 0.4);
+  }
+}
+
+/* Applied to photos and cards on WallDisplay */
+.dynamic-gold-frame {
+  position: relative;
+  animation: dynamicGoldPulseGlow 4.5s ease-in-out infinite;
+  transition: all 0.5s ease;
+}
+
+.dynamic-gold-frame::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    #fff7cc 0%,
+    #f7d154 20%,
+    #e5b842 40%,
+    #f43f5e 60%,
+    #fbbf24 80%,
+    #fff7cc 100%
+  );
+  background-size: 300% 300%;
+  animation: dynamicGoldGradientShift 8s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Featured Takeover Enhanced Dynamic Frame */
+.dynamic-gold-frame-featured {
+  position: relative;
+  animation: dynamicFeaturedPulseGlow 3.5s ease-in-out infinite, newArrivalShimmerFlash 1.2s ease-out;
+}
+
+.dynamic-gold-frame-featured::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #fed21c 18%,
+    #f59e0b 35%,
+    #f43f5e 55%,
+    #38bdf8 75%,
+    #fed21c 90%,
+    #ffffff 100%
+  );
+  background-size: 350% 350%;
+  animation: dynamicGoldGradientShift 6s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 1;
+}
+
+/* Spotlight Hero Media Dynamic Border */
+.spotlight-dynamic-frame {
+  border-radius: 28px;
+  position: relative;
+  padding: 3px;
+  background: linear-gradient(
+    135deg,
+    #fff7cc 0%,
+    #f7d154 20%,
+    #e5b842 40%,
+    #fb7185 60%,
+    #f59e0b 80%,
+    #fff7cc 100%
+  );
+  background-size: 300% 300%;
+  animation: dynamicGoldGradientShift 8s ease-in-out infinite, dynamicGoldPulseGlow 4.5s ease-in-out infinite;
+}
+
+.spotlight-dynamic-frame-featured {
+  border-radius: 28px;
+  position: relative;
+  padding: 4px;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #ffe066 15%,
+    #f59e0b 35%,
+    #f43f5e 55%,
+    #38bdf8 75%,
+    #fed21c 90%,
+    #ffffff 100%
+  );
+  background-size: 350% 350%;
+  animation: dynamicGoldGradientShift 5.5s ease-in-out infinite, dynamicFeaturedPulseGlow 3s ease-in-out infinite;
+}
+
+/* Shimmer Light Sweep on Buttons & Badges */
+@keyframes lightSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  50%, 100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.animate-light-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-light-sweep::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 45%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.05) 55%,
+    transparent 100%
+  );
+  animation: lightSweep 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* VIP Velvet Acrylic Glass */
+.luxury-glass {
+  background: linear-gradient(180deg, rgba(20, 18, 14, 0.88) 0%, rgba(10, 8, 6, 0.94) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(229, 184, 66, 0.28);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 245, 204, 0.15);
+}
+
+/* Stage Spotlight Ambient Beam */
+.stage-spotlight-glow {
+  box-shadow: 0 0 50px rgba(229, 184, 66, 0.25), 0 0 100px rgba(229, 184, 66, 0.12), inset 0 0 30px rgba(229, 184, 66, 0.08);
+}
+

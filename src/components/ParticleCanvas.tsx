@@ -1,14 +1,26 @@
 import React, { useEffect, useRef } from 'react';
+import { WallBackgroundTheme } from '../types';
 
 interface ParticleCanvasProps {
-  color?: string; // e.g. '#e5b842' or '#f43f5e'
+  color?: string; // fallback color
+  theme?: WallBackgroundTheme;
   density?: number;
   speed?: number;
   className?: string;
 }
 
+const THEME_PALETTES: Record<WallBackgroundTheme, string[]> = {
+  'soho-gold': ['#e5b842', '#f59e0b', '#fbbf24', '#ffffff', '#b45309'],
+  'cyber-neon': ['#ec4899', '#06b6d4', '#8b5cf6', '#3b82f6', '#ffffff'],
+  'velvet-rose': ['#fb7185', '#f43f5e', '#fda4af', '#fde047', '#ffffff'],
+  'midnight-sapphire': ['#38bdf8', '#60a5fa', '#818cf8', '#c084fc', '#ffffff'],
+  'disco-fever': ['#ec4899', '#3b82f6', '#eab308', '#a855f7', '#22c55e', '#ffffff'],
+  'emerald-stage': ['#10b981', '#34d399', '#6ee7b7', '#e5b842', '#ffffff'],
+};
+
 export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
   color = '#e5b842',
+  theme,
   density = 40,
   speed = 1,
   className = '',
@@ -33,15 +45,18 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    const palette = theme ? THEME_PALETTES[theme] : [color];
+
     // Initialize particles
     const particles = Array.from({ length: density }, () => ({
       x: Math.random() * (canvas.width || 800),
       y: Math.random() * (canvas.height || 600),
-      radius: Math.random() * 2.5 + 0.8,
+      radius: Math.random() * 2.6 + 0.8,
       alpha: Math.random() * 0.7 + 0.2,
-      vx: (Math.random() - 0.5) * 0.4 * speed,
-      vy: -1 * (Math.random() * 0.6 + 0.2) * speed, // float upwards
+      vx: (Math.random() - 0.5) * 0.45 * speed,
+      vy: -1 * (Math.random() * 0.65 + 0.25) * speed, // float upwards
       pulseSpeed: Math.random() * 0.02 + 0.005,
+      color: palette[Math.floor(Math.random() * palette.length)],
     }));
 
     const render = () => {
@@ -63,10 +78,10 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
         ctx.save();
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.globalAlpha = Math.max(0.1, Math.min(0.9, p.alpha));
-        ctx.shadowColor = color;
-        ctx.shadowBlur = p.radius * 3;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0.12, Math.min(0.95, p.alpha));
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = p.radius * 3.5;
         ctx.fill();
         ctx.restore();
       });
@@ -80,7 +95,7 @@ export const ParticleCanvas: React.FC<ParticleCanvasProps> = ({
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [color, density, speed]);
+  }, [color, theme, density, speed]);
 
   return (
     <canvas

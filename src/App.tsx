@@ -142,84 +142,98 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans selection:bg-[#e5b842] selection:text-black">
+    <div className="h-[100dvh] max-h-[100dvh] bg-[#050505] text-white flex flex-col justify-between font-sans selection:bg-[#e5b842] selection:text-black overflow-hidden">
       {/* Top Application Header Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-zinc-950/90 border-b border-white/10 backdrop-blur-md px-4 py-3">
+      <header className="shrink-0 z-40 bg-zinc-950/95 border-b border-[#e5b842]/30 backdrop-blur-2xl px-3 sm:px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
           {/* Brand Logo */}
           <button
             onClick={() => navigateToView('guest')}
-            className="flex items-center gap-2.5 group text-left"
+            className="flex items-center gap-2.5 group text-left min-h-[38px] cursor-pointer"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden shadow-md group-hover:scale-105 transition-transform shrink-0">
-              <LondonKaraokeLogo className="w-9 h-9" />
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full overflow-hidden shadow-[0_0_15px_rgba(229,184,66,0.4)] group-hover:scale-105 transition-transform shrink-0 border border-[#e5b842]/60">
+              <LondonKaraokeLogo className="w-8 h-8 sm:w-9 sm:h-9" />
             </div>
             <div>
-              <div className="font-extrabold text-sm tracking-wider text-[#e5b842] uppercase leading-none">
+              <div className="font-black text-xs sm:text-sm tracking-widest text-[#e5b842] uppercase leading-none font-cinzel">
                 SINGSHOT
               </div>
-              <div className="text-[10px] text-zinc-400 font-medium leading-none mt-0.5">
-                {venue.sub_name || 'at London Karaoke Club'}
+              <div className="text-[9px] sm:text-[10px] text-zinc-400 font-semibold leading-none mt-1 truncate max-w-[130px] sm:max-w-none">
+                {venue.sub_name || 'London Soho Live'}
               </div>
             </div>
           </button>
 
-          {/* Top-Right Prominent QR Code */}
-          <div className="flex items-center gap-3 bg-zinc-900/90 border-2 border-[#e5b842]/70 ring-1 ring-[#e5b842]/30 p-2 sm:p-2.5 pr-3.5 rounded-2xl shadow-[0_0_25px_rgba(229,184,66,0.35)] backdrop-blur-xl">
-            <div className="relative shrink-0">
-              <div className="absolute -inset-1 rounded-xl bg-[#e5b842]/30 blur-sm animate-pulse pointer-events-none" />
-              {headerQrUrl ? (
-                <img
-                  src={headerQrUrl}
-                  alt="Scan QR code to join"
-                  className="relative z-10 w-[56px] h-[56px] sm:w-[66px] sm:h-[66px] rounded-xl shadow-md bg-[#e5b842] p-0.5 border border-black/30 object-contain"
-                />
-              ) : (
-                <div className="relative z-10 w-[56px] h-[56px] sm:w-[66px] sm:h-[66px] rounded-xl bg-[#e5b842] flex items-center justify-center">
-                  <QrCode className="w-8 h-8 text-black" />
-                </div>
-              )}
-              <span className="absolute -top-1 -right-1 z-20 flex h-3 w-3">
+          {/* Right Header: Responsive QR Badge on Mobile, Full Widget on Desktop */}
+          <div className="flex items-center gap-2">
+            {/* Mobile-only compact Live indicator */}
+            <div className="flex sm:hidden items-center gap-1.5 bg-zinc-900/90 border border-[#e5b842]/60 px-3 py-1 rounded-full shadow-lg backdrop-blur-md">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e5b842] opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#e5b842]" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#e5b842]" />
+              </span>
+              <span className="text-[10px] font-black text-[#e5b842] uppercase tracking-wider font-cinzel">
+                SOHO LIVE
               </span>
             </div>
 
-            <div className="flex flex-col justify-center text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs sm:text-sm font-black text-[#e5b842] tracking-wider uppercase leading-none drop-shadow">
-                  SCAN TO JOIN
-                </span>
-                <span className="flex items-center gap-0.5 bg-[#e5b842]/20 text-[#e5b842] text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
-                  <Sparkles className="w-2 h-2" /> LIVE
+            {/* Desktop / Tablet Prominent QR Code */}
+            <div className="hidden sm:flex items-center gap-2.5 bg-zinc-950/90 border border-[#e5b842]/70 ring-1 ring-[#e5b842]/30 p-1.5 pr-3 rounded-2xl shadow-[0_0_25px_rgba(229,184,66,0.35)] backdrop-blur-xl">
+              <div className="relative shrink-0">
+                {headerQrUrl ? (
+                  <img
+                    src={headerQrUrl}
+                    alt="Scan QR code to join"
+                    className="relative z-10 w-9 h-9 rounded-xl shadow-md bg-[#e5b842] p-0.5 border border-black/30 object-contain"
+                  />
+                ) : (
+                  <div className="relative z-10 w-9 h-9 rounded-xl bg-[#e5b842] flex items-center justify-center">
+                    <QrCode className="w-5 h-5 text-black" />
+                  </div>
+                )}
+                <span className="absolute -top-1 -right-1 z-20 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e5b842] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#e5b842]" />
                 </span>
               </div>
-              <span className="text-[10px] sm:text-[11px] text-zinc-300 font-medium leading-tight mt-1">
-                Open Camera on Phone
-              </span>
-              <span className="text-[9px] text-[#e5b842]/90 font-bold uppercase tracking-wider mt-0.5">
-                Instant Screen Broadcast
-              </span>
+
+              <div className="flex flex-col justify-center text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-black text-[#e5b842] tracking-wider uppercase leading-none font-cinzel">
+                    SCAN TO JOIN
+                  </span>
+                  <span className="flex items-center gap-0.5 bg-[#e5b842]/20 text-[#e5b842] text-[8px] font-black px-1.5 py-0.5 rounded uppercase">
+                    <Sparkles className="w-2 h-2" /> LIVE
+                  </span>
+                </div>
+                <span className="text-[10px] text-zinc-300 font-medium leading-tight mt-0.5">
+                  Open Camera on Phone
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main View Area */}
-      <main className="flex-1 flex flex-col justify-center p-4">
+      {/* Main View Area (Flex 1, centered, fitted inside one screen) */}
+      <main className="flex-1 min-h-0 flex flex-col justify-center items-center px-2 sm:px-4 py-1 sm:py-2 overflow-y-auto">
         {currentView === 'admin' && (
-          <AdminDashboard
-            venue={venue}
-            onUpdateVenue={(updated) => setVenue((prev) => ({ ...prev, ...updated }))}
-          />
+          <div className="w-full h-full overflow-y-auto">
+            <AdminDashboard
+              venue={venue}
+              onUpdateVenue={(updated) => setVenue((prev) => ({ ...prev, ...updated }))}
+            />
+          </div>
         )}
 
         {currentView === 'commercial' && (
-          <CommercialVenueSection onBackToGuest={() => navigateToView('guest')} />
+          <div className="w-full h-full overflow-y-auto">
+            <CommercialVenueSection onBackToGuest={() => navigateToView('guest')} />
+          </div>
         )}
 
         {currentView === 'guest' && (
-          <div className="w-full my-auto py-4">
+          <div className="w-full h-full flex flex-col justify-center items-center my-auto">
             {guestStep === 'landing' && (
               <GuestLanding
                 venue={venue}
@@ -262,38 +276,38 @@ export default function App() {
 
       {/* Discrete Bottom Footer with Quick Operator Links */}
       {currentView !== 'wall' && (
-        <footer className="border-t border-white/10 bg-zinc-950/60 py-2.5 px-4 text-center text-xs text-zinc-400">
-          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+        <footer className="shrink-0 border-t border-white/10 bg-zinc-950/95 py-2 px-3 sm:px-4 text-center text-xs text-zinc-400 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => navigateToView('guest')}
-                className={`transition-colors cursor-pointer hover:text-white font-medium ${
-                  currentView === 'guest' ? 'text-[#e5b842] font-bold' : 'text-zinc-400'
+                className={`py-1 px-2.5 rounded-lg transition-colors cursor-pointer text-xs font-semibold flex items-center ${
+                  currentView === 'guest' ? 'text-[#e5b842] bg-[#e5b842]/10 border border-[#e5b842]/30 font-bold' : 'text-zinc-400 hover:bg-zinc-900'
                 }`}
               >
                 Guest Camera
               </button>
-              <span className="text-zinc-600">•</span>
+              <span className="text-zinc-700">•</span>
               <button
                 onClick={() => navigateToView('wall')}
-                className={`transition-colors cursor-pointer hover:text-[#e5b842] font-medium ${
-                  currentView === 'wall' ? 'text-[#e5b842] font-bold' : 'text-zinc-400'
+                className={`py-1 px-2.5 rounded-lg transition-colors cursor-pointer hover:text-[#e5b842] font-medium text-xs flex items-center ${
+                  currentView === 'wall' ? 'text-[#e5b842] bg-[#e5b842]/10 border border-[#e5b842]/30 font-bold' : 'text-zinc-400 hover:bg-zinc-900'
                 }`}
               >
                 TV Wall Screen
               </button>
-              <span className="text-zinc-600">•</span>
+              <span className="text-zinc-700">•</span>
               <button
                 onClick={() => navigateToView('admin')}
-                className={`transition-colors cursor-pointer hover:text-[#e5b842] font-medium ${
-                  currentView === 'admin' ? 'text-[#e5b842] font-bold' : 'text-zinc-400'
+                className={`py-1 px-2.5 rounded-lg transition-colors cursor-pointer hover:text-[#e5b842] font-medium text-xs flex items-center ${
+                  currentView === 'admin' ? 'text-[#e5b842] bg-[#e5b842]/10 border border-[#e5b842]/30 font-bold' : 'text-zinc-400 hover:bg-zinc-900'
                 }`}
               >
                 Staff Moderation
               </button>
             </div>
 
-            <div className="text-[11px] text-zinc-400">
+            <div className="text-[10px] text-zinc-500 hidden sm:block">
               SingShot Live Stage Broadcast • London Karaoke Club
             </div>
           </div>

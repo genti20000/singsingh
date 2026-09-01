@@ -191,171 +191,121 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appUrl)}&quote=${encodeURIComponent(formattedShareMessage)}`;
 
   return (
-    <div className="flex flex-col items-center gap-5 w-full max-w-md mx-auto p-4 sm:p-6 bg-zinc-950/90 border border-[#e5b842]/40 rounded-3xl backdrop-blur-xl text-white shadow-2xl text-center">
+    <div className="flex flex-col justify-between h-full max-h-full w-full max-w-md mx-auto p-3 sm:p-5 bg-zinc-950/95 border border-[#e5b842]/40 rounded-3xl backdrop-blur-2xl text-white shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-center select-none">
       {/* Top Banner */}
-      <div className="flex flex-col items-center gap-2">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e5b842]/20 border-2 border-[#e5b842] text-[#e5b842] shadow-[0_0_20px_rgba(229,184,66,0.3)]">
-          <Sparkles className="h-7 w-7 animate-pulse" />
+      <div className="flex flex-col items-center shrink-0">
+        <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffe066] via-[#f59e0b] to-[#d97706] text-black shadow-[0_0_25px_rgba(229,184,66,0.4)] mb-1">
+          <Sparkles className="h-6 w-6 stroke-[2.5] animate-pulse" />
         </div>
-        <h2 className="font-serif text-3xl font-extrabold tracking-wide text-white uppercase mt-1">
-          YOU'RE IN.
+        <h2 className="font-serif text-xl sm:text-2xl font-black tracking-tight text-white uppercase">
+          YOU'RE IN THE MIX!
         </h2>
-        <p className="text-xs sm:text-sm text-zinc-300 max-w-xs font-medium">
-          Your SingShot is submitted. Keep an eye on the venue screens!
+        <p className="text-[11px] sm:text-xs text-zinc-300 font-medium max-w-xs">
+          Submitted! Watch the main venue wall for your spotlight moment.
         </p>
       </div>
 
       {/* Moderation Status Pill */}
-      <div className="w-full">
+      <div className="w-full shrink-0 my-1">
         {submission.status === 'approved' ? (
-          <div className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-xs font-bold shadow-lg">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>APPROVED! YOUR PHOTO IS LIVE ON VENUE SCREENS</span>
+          <div className="flex items-center justify-center gap-1.5 p-2 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[10px] sm:text-xs font-black shadow-[0_0_15px_rgba(16,185,129,0.2)] tracking-wide">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>APPROVED • BROADCASTING ON STAGE SCREENS</span>
           </div>
         ) : submission.status === 'rejected' ? (
-          <div className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-rose-500/20 border border-rose-500/50 text-rose-300 text-xs font-bold">
-            <span>Photo was not approved. Please try submitting another photo!</span>
+          <div className="flex items-center justify-center gap-1.5 p-2 rounded-2xl bg-rose-500/20 border border-rose-500/50 text-rose-300 text-[10px] sm:text-xs font-bold">
+            <span>Photo was not approved. Tap below to try another shot!</span>
           </div>
         ) : (
-          <div className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold animate-pulse">
-            <Clock className="w-4 h-4 text-amber-400" />
-            <span>WAITING FOR VENUE APPROVAL...</span>
+          <div className="flex items-center justify-center gap-1.5 p-2 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] sm:text-xs font-black animate-pulse tracking-wide">
+            <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>QUEUED FOR STAGE BROADCAST...</span>
           </div>
         )}
       </div>
 
       {/* Attached Reward Banner if staff attached one */}
       {submission.reward && (
-        <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-black shadow-xl border-2 border-yellow-200">
-          <div className="flex items-center justify-center gap-2 font-extrabold text-sm uppercase">
-            <Gift className="w-5 h-5" /> YOU'VE WON {submission.reward.badge}!
+        <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#ffe066] via-amber-400 to-[#d97706] text-black shadow-lg border border-yellow-200 shrink-0 my-1">
+          <div className="flex items-center justify-center gap-1.5 font-black text-xs uppercase tracking-wide">
+            <Gift className="w-4 h-4 shrink-0" /> VIP PERK: {submission.reward.badge}!
           </div>
-          <p className="text-xs font-bold mt-1 text-black/80">
-            {submission.reward.title}
-          </p>
-          <div className="mt-2 pt-2 border-t border-black/20 text-[11px] font-black uppercase tracking-widest bg-black/10 py-1.5 rounded-lg">
-            SHOW THIS SCREEN TO THE BAR • CODE: {submission.reward.code || 'SINGSHOT'}
+          <div className="mt-1 pt-1 border-t border-black/20 text-[10px] font-black uppercase tracking-widest bg-black/10 py-1 rounded-lg">
+            SHOW TO BAR STAFF • CODE: {submission.reward.code || 'SINGSHOT'}
           </div>
         </div>
       )}
 
       {/* Visual Card Preview */}
-      <div className="w-full max-w-[320px] my-1">
-        <BrandedCard submission={submission} venue={venue} size="normal" />
+      <div className="w-full max-w-[190px] sm:max-w-[220px] mx-auto my-auto shrink-0 py-1">
+        <div className="drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)]">
+          <BrandedCard submission={submission} venue={venue} size="thumb" />
+        </div>
       </div>
 
-      {/* SHARE TO SOCIALS SECTION */}
-      <div className="w-full flex flex-col gap-3 rounded-2xl bg-zinc-900/90 border border-[#e5b842]/30 p-3.5 shadow-lg text-left">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-[#e5b842]/20 border border-[#e5b842]/50 flex items-center justify-center text-[#e5b842]">
-              <Share2 className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-xs font-black uppercase tracking-wider text-white block">
-                Share to Socials
-              </span>
-              <span className="text-[10px] text-zinc-400">
-                Tagged at <strong className="text-zinc-200">{venueName}</strong>
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowShareOptions((prev) => !prev)}
-            className="text-[11px] text-[#e5b842] hover:text-amber-300 font-bold flex items-center gap-0.5"
-          >
-            <span>{showShareOptions ? 'Hide' : 'Options'}</span>
-            {showShareOptions ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-        </div>
-
-        {/* Main Share Button */}
+      {/* Action Buttons & Socials */}
+      <div className="flex flex-col gap-2 w-full shrink-0">
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={handleNativeOrToggleShare}
-            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white font-extrabold text-xs shadow-md hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1.5"
+            className="w-full min-h-[42px] py-2 px-3 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white font-extrabold text-xs shadow-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>Share to Story</span>
+            <Share2 className="w-4 h-4 shrink-0" />
+            <span>Share Story</span>
           </button>
 
           <button
             type="button"
             onClick={handleCopyMessage}
-            className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            className={`w-full min-h-[42px] py-2 px-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               copied
                 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                : 'bg-zinc-800 border-white/20 text-zinc-200 hover:text-white hover:border-white/40'
+                : 'bg-zinc-900 border-white/20 text-zinc-200 hover:text-white hover:border-white/40'
             }`}
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#e5b842]" />}
+            {copied ? <Check className="w-4 h-4 text-emerald-400 shrink-0" /> : <Copy className="w-4 h-4 text-[#e5b842] shrink-0" />}
             <span>{copied ? 'Copied!' : 'Copy Caption'}</span>
           </button>
         </div>
 
-        {/* Direct Social Shortcuts & Message Preview */}
         {showShareOptions && (
-          <div className="flex flex-col gap-2.5 pt-2 border-t border-white/10 animate-in fade-in duration-200">
-            {/* Quick Share Links */}
-            <div className="grid grid-cols-3 gap-1.5">
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg bg-[#25D366]/20 border border-[#25D366]/40 text-[#25D366] text-[11px] font-bold hover:bg-[#25D366]/30 transition-colors"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>WhatsApp</span>
-              </a>
-
-              <a
-                href={twitterUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg bg-[#1DA1F2]/20 border border-[#1DA1F2]/40 text-[#1DA1F2] text-[11px] font-bold hover:bg-[#1DA1F2]/30 transition-colors"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>X / Post</span>
-              </a>
-
-              <a
-                href={facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg bg-[#1877F2]/20 border border-[#1877F2]/40 text-[#1877F2] text-[11px] font-bold hover:bg-[#1877F2]/30 transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Facebook</span>
-              </a>
-            </div>
-
-            {/* Formatted Message Box */}
-            <div className="relative rounded-xl bg-black/60 border border-white/10 p-2.5 text-[11px] text-zinc-300 font-mono leading-relaxed max-h-24 overflow-y-auto whitespace-pre-line select-all">
-              {formattedShareMessage}
-            </div>
+          <div className="grid grid-cols-3 gap-1.5 pt-0.5 animate-in fade-in duration-200">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1 min-h-[36px] py-1.5 px-1 rounded-xl bg-[#25D366]/20 border border-[#25D366]/40 text-[#25D366] text-[10px] font-bold hover:bg-[#25D366]/30 transition-colors"
+            >
+              <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>WhatsApp</span>
+            </a>
+            <a
+              href={twitterUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1 min-h-[36px] py-1.5 px-1 rounded-xl bg-[#1DA1F2]/20 border border-[#1DA1F2]/40 text-[#1DA1F2] text-[10px] font-bold hover:bg-[#1DA1F2]/30 transition-colors"
+            >
+              <Send className="w-3.5 h-3.5 shrink-0" />
+              <span>X / Tweet</span>
+            </a>
+            <a
+              href={facebookUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1 min-h-[36px] py-1.5 px-1 rounded-xl bg-[#1877F2]/20 border border-[#1877F2]/40 text-[#1877F2] text-[10px] font-bold hover:bg-[#1877F2]/30 transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+              <span>Facebook</span>
+            </a>
           </div>
         )}
-      </div>
-
-      {/* Manual refresh or Submit another */}
-      <div className="flex flex-col gap-2.5 w-full pt-1">
-        <button
-          onClick={handleManualRefresh}
-          disabled={isChecking}
-          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin text-[#e5b842]' : ''}`} />
-          <span>Check Screen Status</span>
-        </button>
 
         <button
           onClick={onReset}
-          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#e5b842] to-amber-500 text-black font-extrabold text-sm shadow-lg hover:brightness-110 active:scale-98 transition-all"
+          className="w-full min-h-[46px] py-2.5 px-5 rounded-2xl bg-gradient-to-r from-[#ffe066] via-[#f59e0b] to-[#d97706] text-black font-black text-xs sm:text-sm shadow-[0_0_25px_rgba(229,184,66,0.35)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
         >
-          TAKE ANOTHER SELFIE
+          <span>TAKE ANOTHER SELFIE</span>
         </button>
       </div>
     </div>

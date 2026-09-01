@@ -28,15 +28,26 @@ export const LondonKaraokeLogo: React.FC<LondonKaraokeLogoProps> = ({
           >
             <circle cx="4" cy="4" r="0.8" fill="#000000" opacity="0.32" />
           </pattern>
-          <radialGradient id="lkcBadgeYellow" cx="50%" cy="45%" r="55%">
-            <stop offset="0%" stopColor="#fed21c" />
+          {/* 24K Luxury Gold Radial Gradient */}
+          <radialGradient id="lkcBadgeYellow" cx="45%" cy="38%" r="65%">
+            <stop offset="0%" stopColor="#fff7cc" />
+            <stop offset="25%" stopColor="#fed21c" />
             <stop offset="70%" stopColor="#f7be0b" />
-            <stop offset="100%" stopColor="#dfa705" />
+            <stop offset="95%" stopColor="#cf9602" />
+            <stop offset="100%" stopColor="#8c6200" />
           </radialGradient>
+          {/* Metallic Ring Gradient */}
+          <linearGradient id="lkcGoldRim" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fff9d6" />
+            <stop offset="35%" stopColor="#e5b842" />
+            <stop offset="70%" stopColor="#8a6109" />
+            <stop offset="100%" stopColor="#ffe580" />
+          </linearGradient>
         </defs>
 
         {/* Outer Ring Shadow & Base */}
-        <circle cx="256" cy="256" r="248" fill="#09090b" />
+        <circle cx="256" cy="256" r="250" fill="#050507" />
+        <circle cx="256" cy="256" r="246" stroke="url(#lkcGoldRim)" strokeWidth="6" fill="none" />
 
         {/* Yellow Background Circle */}
         <circle
@@ -45,7 +56,7 @@ export const LondonKaraokeLogo: React.FC<LondonKaraokeLogoProps> = ({
           r="234"
           fill="url(#lkcBadgeYellow)"
           stroke="#09090b"
-          strokeWidth="14"
+          strokeWidth="12"
         />
 
         {/* Dot Pattern Overlay */}

@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Submission, EventSession, Reward, Venue, QRShape, WallLayoutMode } from '../types';
+import { Submission, EventSession, Reward, Venue, QRShape, WallLayoutMode, WallBackgroundTheme } from '../types';
 import { QR_SHAPES_CONFIG } from '../utils/qrShapes';
 import { LondonKaraokeLogo } from './LondonKaraokeLogo';
 import { DataService, subscribeToSync } from '../services/dataService';
 import { INITIAL_EVENTS, INITIAL_REWARDS } from '../data/initialData';
 import { removeBackground } from '../utils/removeBackground';
+import { WALL_BACKGROUND_THEMES } from './WallDisplay';
 import {
   Check,
   X,
@@ -27,6 +28,8 @@ import {
   GalleryHorizontal,
   MonitorPlay,
   Scissors,
+  Palette,
+  Layers,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -50,6 +53,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [currentLayoutMode, setCurrentLayoutMode] = useState<WallLayoutMode>(
     venue.wall_layout_mode || 'spotlight'
   );
+  const [currentBackgroundTheme, setCurrentBackgroundTheme] = useState<WallBackgroundTheme>(
+    venue.wall_background_theme || 'soho-gold'
+  );
   const prevCountRef = useRef<number>(0);
 
   const WALL_LAYOUT_OPTIONS: {
@@ -66,12 +72,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { id: 'carousel', label: 'Carousel', subLabel: 'Flow Deck', badge: '3D Carousel', icon: GalleryHorizontal },
   ];
 
-  // Keep current layout mode in sync with props
+  // Keep current layout mode & background theme in sync with props
   useEffect(() => {
     if (venue.wall_layout_mode && venue.wall_layout_mode !== currentLayoutMode) {
       setCurrentLayoutMode(venue.wall_layout_mode);
     }
   }, [venue.wall_layout_mode, currentLayoutMode]);
+
+  useEffect(() => {
+    if (venue.wall_background_theme && venue.wall_background_theme !== currentBackgroundTheme) {
+      setCurrentBackgroundTheme(venue.wall_background_theme);
+    }
+  }, [venue.wall_background_theme, currentBackgroundTheme]);
 
   // Modal states
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -86,6 +98,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [tickerText, setTickerText] = useState(venue.wall_ticker_text);
   const [autoApprove, setAutoApprove] = useState(!!venue.auto_approve);
   const [qrShape, setQrShape] = useState<QRShape>(venue.qr_shape || 'squircle');
+  const [modalBgTheme, setModalBgTheme] = useState<WallBackgroundTheme>(
+    venue.wall_background_theme || 'soho-gold'
+  );
 
   // Fetch initial data with silent background update support
   const fetchData = useCallback(async (isManual = false) => {
@@ -142,8 +157,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       if (event.type === 'VENUE_UPDATED' && (event.data as Venue)?.wall_layout_mode) {
         setCurrentLayoutMode((event.data as Venue).wall_layout_mode!);
       }
+      if (event.type === 'VENUE_UPDATED' && (event.data as Venue)?.wall_background_theme) {
+        setCurrentBackgroundTheme((event.data as Venue).wall_background_theme!);
+      }
       if (event.type === 'WALL_LAYOUT_CHANGED' && (event.data as { mode?: WallLayoutMode })?.mode) {
         setCurrentLayoutMode((event.data as { mode: WallLayoutMode }).mode);
+      }
+      if (event.type === 'WALL_BACKGROUND_CHANGED' && (event.data as { theme?: WallBackgroundTheme })?.theme) {
+        setCurrentBackgroundTheme((event.data as { theme: WallBackgroundTheme }).theme);
       }
     });
 
@@ -160,6 +181,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       onUpdateVenue({ wall_layout_mode: mode });
     } catch (err) {
       console.error('Failed to change wall layout mode:', err);
+    }
+  };
+
+  const handleSetBackgroundTheme = async (theme: WallBackgroundTheme) => {
+    setCurrentBackgroundTheme(theme);
+    try {
+      await DataService.updateVenue({ wall_background_theme: theme });
+      onUpdateVenue({ wall_background_theme: theme });
+    } catch (err) {
+      console.error('Failed to change wall background theme:', err);
     }
   };
 
@@ -235,7 +266,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleSaveVenueSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updated = { wall_ticker_text: tickerText, auto_approve: autoApprove, qr_shape: qrShape };
+    const updated = {
+      wall_ticker_text: tickerText,
+      auto_approve: autoApprove,
+      qr_shape: qrShape,
+      wall_background_theme: modalBgTheme,
+    };
     try {
       await DataService.updateVenue(updated);
       onUpdateVenue(updated);
@@ -353,53 +389,97 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
 
           {/* Remote Mode Switcher Toggle Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
-            {WALL_LAYOUT_OPTIONS.map((layout) => {
-              const Icon = layout.icon;
-              const isActive = currentLayoutMode === layout.id;
-              return (
-                <button
-                  key={layout.id}
-                  id={`admin-layout-${layout.id}`}
-                  onClick={() => handleSetLayoutMode(layout.id)}
-                  className={`relative p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2.5 group ${
-                    isActive
-                      ? 'bg-[#e5b842] text-black border-[#e5b842] shadow-[0_0_20px_rgba(229,184,66,0.35)] scale-[1.02] ring-2 ring-[#e5b842]/50'
-                      : 'bg-zinc-900/90 text-zinc-300 border-white/10 hover:border-white/30 hover:bg-zinc-800 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div
-                      className={`p-2 rounded-xl transition-colors ${
-                        isActive
-                          ? 'bg-black text-[#e5b842]'
-                          : 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
+          <div className="space-y-1.5">
+            <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+              Screen Layout Grid
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {WALL_LAYOUT_OPTIONS.map((layout) => {
+                const Icon = layout.icon;
+                const isActive = currentLayoutMode === layout.id;
+                return (
+                  <button
+                    key={layout.id}
+                    id={`admin-layout-${layout.id}`}
+                    onClick={() => handleSetLayoutMode(layout.id)}
+                    className={`relative p-2.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 group ${
+                      isActive
+                        ? 'bg-[#e5b842] text-black border-[#e5b842] shadow-[0_0_20px_rgba(229,184,66,0.35)] scale-[1.02] ring-2 ring-[#e5b842]/50'
+                        : 'bg-zinc-900/90 text-zinc-300 border-white/10 hover:border-white/30 hover:bg-zinc-800 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div
+                        className={`p-1.5 rounded-xl transition-colors ${
+                          isActive
+                            ? 'bg-black text-[#e5b842]'
+                            : 'bg-zinc-800 text-zinc-300 group-hover:text-white group-hover:bg-zinc-700'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      {isActive ? (
+                        <span className="flex items-center gap-1 bg-black text-[#e5b842] text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                          <Check className="w-2 h-2 stroke-[3]" /> LIVE
+                        </span>
+                      ) : (
+                        <span className="text-[8px] font-bold text-zinc-500 group-hover:text-zinc-400 uppercase tracking-wider">
+                          {layout.badge}
+                        </span>
+                      )}
                     </div>
-                    {isActive ? (
-                      <span className="flex items-center gap-1 bg-black text-[#e5b842] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" /> LIVE
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-bold text-zinc-500 group-hover:text-zinc-400 uppercase tracking-wider">
-                        {layout.badge}
-                      </span>
-                    )}
-                  </div>
 
-                  <div>
-                    <div className={`font-black text-sm leading-tight ${isActive ? 'text-black' : 'text-white'}`}>
-                      {layout.label}
+                    <div>
+                      <div className={`font-black text-xs leading-tight ${isActive ? 'text-black' : 'text-white'}`}>
+                        {layout.label}
+                      </div>
+                      <div className={`text-[10px] font-medium leading-tight mt-0.5 ${isActive ? 'text-black/80' : 'text-zinc-400'}`}>
+                        {layout.subLabel}
+                      </div>
                     </div>
-                    <div className={`text-[11px] font-medium leading-tight mt-0.5 ${isActive ? 'text-black/80' : 'text-zinc-400'}`}>
-                      {layout.subLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Remote Wall Background Theme Switcher Grid */}
+          <div className="pt-2 border-t border-white/10 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5" /> Wall Background Theme & Atmosphere
+              </div>
+              <span className="text-[10px] text-zinc-400 font-medium">
+                {WALL_BACKGROUND_THEMES.find((t) => t.id === currentBackgroundTheme)?.name || 'London Soho Gold'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+              {WALL_BACKGROUND_THEMES.map((theme) => {
+                const isSelected = currentBackgroundTheme === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => handleSetBackgroundTheme(theme.id)}
+                    className={`p-2.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      isSelected
+                        ? 'border-[#e5b842] bg-zinc-800 shadow-[0_0_15px_rgba(229,184,66,0.3)] ring-1 ring-[#e5b842] scale-[1.02]'
+                        : 'border-white/10 bg-zinc-900/80 hover:border-white/30 text-zinc-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-[10px] font-black text-amber-400 truncate">
+                        {theme.badge}
+                      </span>
+                      {isSelected && <Check className="w-3 h-3 text-[#e5b842] shrink-0" />}
                     </div>
-                  </div>
-                </button>
-              );
-            })}
+                    <span className="text-[11px] font-bold text-white truncate">
+                      {theme.name.split(' ')[0]} {theme.name.split(' ')[1] || ''}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -800,6 +880,43 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     >
                       <span className="text-sm">{cfg.badge.split(' ')[0]}</span>
                       <span className="text-[10px] leading-tight truncate w-full">{cfg.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Wall Background Theme Selection */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-[#e5b842]" /> Default Wall Background Theme
+                </label>
+                <span className="text-[10px] text-[#e5b842] font-semibold">
+                  {WALL_BACKGROUND_THEMES.find((t) => t.id === modalBgTheme)?.name || 'London Soho Gold'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                {WALL_BACKGROUND_THEMES.map((theme) => {
+                  const isSelected = modalBgTheme === theme.id;
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => setModalBgTheme(theme.id)}
+                      className={`p-2 rounded-xl border text-left transition-all flex items-center justify-between gap-1 ${
+                        isSelected
+                          ? 'bg-[#e5b842] text-black border-[#e5b842] font-extrabold shadow-md'
+                          : 'bg-zinc-900 text-zinc-300 border-white/10 hover:border-white/30 hover:text-white'
+                      }`}
+                    >
+                      <div className="truncate">
+                        <div className="text-[11px] font-bold truncate">{theme.name}</div>
+                        <div className={`text-[9px] ${isSelected ? 'text-black/80' : 'text-zinc-400'}`}>
+                          {theme.badge}
+                        </div>
+                      </div>
+                      {isSelected && <Check className="w-3 h-3 text-black shrink-0" />}
                     </button>
                   );
                 })}

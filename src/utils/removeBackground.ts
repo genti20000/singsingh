@@ -13,51 +13,96 @@ export interface BackgroundRemovalOptions {
   contrastBoost?: number;
 }
 
-export type CutoutStyle = 'transparent' | 'original' | 'portrait-blur' | 'gold-glow' | 'studio-dark' | 'soho-neon';
+export type CutoutStyle =
+  | 'gold-glow'
+  | 'transparent'
+  | 'soho-neon'
+  | 'disco-fever'
+  | 'rose-gold'
+  | 'red-carpet'
+  | 'cyber-stage'
+  | 'studio-dark'
+  | 'portrait-blur'
+  | 'original';
 
 export interface CutoutPreset {
   id: CutoutStyle;
   label: string;
   badge: string;
+  category: 'vip' | 'party' | 'scene' | 'studio';
   description: string;
 }
 
 export const CUTOUT_PRESETS: CutoutPreset[] = [
   {
-    id: 'transparent',
-    label: 'Transparent Cutout',
-    badge: '✂️ NO BG',
-    description: 'Crisp cutout that floats seamlessly over the Wall TV stage glow',
-  },
-  {
     id: 'gold-glow',
     label: 'VIP Gold Halo',
     badge: '👑 GOLD AURA',
-    description: 'Subject cutout framed with radiating golden stage aura',
+    category: 'vip',
+    description: 'Radiating golden stage aura with sparkling VIP particle glow',
+  },
+  {
+    id: 'transparent',
+    label: 'Transparent Cutout',
+    badge: '✂️ CUTOUT',
+    category: 'studio',
+    description: 'Crisp subject cutout floating over the live TV wall stage',
+  },
+  {
+    id: 'soho-neon',
+    label: 'Soho London Neon',
+    badge: '🍸 SOHO NIGHTS',
+    category: 'scene',
+    description: 'Iconic Soho nightlife skyline with vibrant neon sign reflections',
+  },
+  {
+    id: 'disco-fever',
+    label: 'Retro Disco Glitz',
+    badge: '🪩 DISCO FEVER',
+    category: 'party',
+    description: 'Shimmering mirrorball prism rays & multi-colored stage lights',
+  },
+  {
+    id: 'rose-gold',
+    label: 'Rose Gold Champagne',
+    badge: '🥂 BUBBLY ROSE',
+    category: 'vip',
+    description: 'Warm celebratory champagne bubbles & soft rose quartz ambiance',
+  },
+  {
+    id: 'red-carpet',
+    label: 'VIP Red Carpet',
+    badge: '🎬 RED CARPET',
+    category: 'vip',
+    description: 'Paparazzi camera flash starbursts & luxury crimson carpet',
+  },
+  {
+    id: 'cyber-stage',
+    label: 'Cyber Laser Stage',
+    badge: '⚡ CYBER STAGE',
+    category: 'party',
+    description: 'High-octane neon laser beams & perspective floor grid',
   },
   {
     id: 'studio-dark',
     label: 'Velvet Black Studio',
     badge: '📸 STUDIO',
+    category: 'studio',
     description: 'Clean dark studio background for high-contrast portrait look',
-  },
-  {
-    id: 'soho-neon',
-    label: 'Soho Neon Glow',
-    badge: '🍸 SOHO NIGHTS',
-    description: 'Subtle magenta-to-gold ambient nightlife backdrop',
-  },
-  {
-    id: 'original',
-    label: 'Keep Original BG',
-    badge: '🎨 ORIGINAL',
-    description: 'Retain the original venue/room background as captured',
   },
   {
     id: 'portrait-blur',
     label: 'Soft Portrait Blur',
     badge: '✨ BLUR BG',
+    category: 'studio',
     description: 'Keep you sharp while softly blurring the room behind you',
+  },
+  {
+    id: 'original',
+    label: 'Keep Original BG',
+    badge: '🎨 ORIGINAL',
+    category: 'studio',
+    description: 'Retain the original venue/room background as captured',
   },
 ];
 
@@ -279,43 +324,259 @@ export async function removeBackgroundClient(
         ctx.putImageData(imageData, 0, 0);
 
         // 6. Optional: Composite against preset background style
-        if (style === 'gold-glow' || style === 'studio-dark' || style === 'soho-neon') {
+        if (style !== 'transparent') {
           const bgCanvas = document.createElement('canvas');
           bgCanvas.width = targetWidth;
           bgCanvas.height = targetHeight;
           const bgCtx = bgCanvas.getContext('2d');
           if (bgCtx) {
             if (style === 'gold-glow') {
+              // VIP Gold Halo & Stage Lights
               const grad = bgCtx.createRadialGradient(
-                targetWidth / 2, targetHeight * 0.45, targetWidth * 0.1,
-                targetWidth / 2, targetHeight * 0.45, targetWidth * 0.85
+                targetWidth / 2, targetHeight * 0.42, targetWidth * 0.08,
+                targetWidth / 2, targetHeight * 0.45, targetWidth * 0.88
               );
-              grad.addColorStop(0, '#3a2a05');
-              grad.addColorStop(0.5, '#191202');
-              grad.addColorStop(1, '#050505');
+              grad.addColorStop(0, '#5a4208');
+              grad.addColorStop(0.35, '#2b1e04');
+              grad.addColorStop(0.75, '#120d02');
+              grad.addColorStop(1, '#050402');
               bgCtx.fillStyle = grad;
               bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+              // Top golden spotlight beam
+              bgCtx.save();
+              const cone = bgCtx.createLinearGradient(targetWidth / 2, 0, targetWidth / 2, targetHeight * 0.7);
+              cone.addColorStop(0, 'rgba(245, 197, 66, 0.35)');
+              cone.addColorStop(1, 'rgba(245, 197, 66, 0)');
+              bgCtx.fillStyle = cone;
+              bgCtx.beginPath();
+              bgCtx.moveTo(targetWidth * 0.35, 0);
+              bgCtx.lineTo(targetWidth * 0.65, 0);
+              bgCtx.lineTo(targetWidth * 0.95, targetHeight * 0.85);
+              bgCtx.lineTo(targetWidth * 0.05, targetHeight * 0.85);
+              bgCtx.closePath();
+              bgCtx.fill();
+              bgCtx.restore();
+
+              // Sparkle particles
+              for (let i = 0; i < 28; i++) {
+                const px = ((i * 137) % targetWidth);
+                const py = ((i * 229) % targetHeight);
+                const pr = (i % 3) + 1.2;
+                bgCtx.beginPath();
+                bgCtx.arc(px, py, pr, 0, Math.PI * 2);
+                bgCtx.fillStyle = 'rgba(255, 230, 150, 0.6)';
+                bgCtx.shadowColor = '#e5b842';
+                bgCtx.shadowBlur = 8;
+                bgCtx.fill();
+              }
+            } else if (style === 'soho-neon') {
+              // Soho London Neon Nights
+              const grad = bgCtx.createLinearGradient(0, 0, targetWidth, targetHeight);
+              grad.addColorStop(0, '#350930');
+              grad.addColorStop(0.4, '#130826');
+              grad.addColorStop(0.8, '#08142b');
+              grad.addColorStop(1, '#040b17');
+              bgCtx.fillStyle = grad;
+              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+              // Rooftop skyline silhouette at bottom
+              bgCtx.fillStyle = '#050308';
+              bgCtx.beginPath();
+              bgCtx.moveTo(0, targetHeight);
+              bgCtx.lineTo(0, targetHeight * 0.85);
+              bgCtx.lineTo(targetWidth * 0.15, targetHeight * 0.85);
+              bgCtx.lineTo(targetWidth * 0.15, targetHeight * 0.78);
+              bgCtx.lineTo(targetWidth * 0.28, targetHeight * 0.78);
+              bgCtx.lineTo(targetWidth * 0.28, targetHeight * 0.86);
+              bgCtx.lineTo(targetWidth * 0.45, targetHeight * 0.86);
+              bgCtx.lineTo(targetWidth * 0.45, targetHeight * 0.74);
+              bgCtx.lineTo(targetWidth * 0.6, targetHeight * 0.74);
+              bgCtx.lineTo(targetWidth * 0.6, targetHeight * 0.88);
+              bgCtx.lineTo(targetWidth * 0.8, targetHeight * 0.88);
+              bgCtx.lineTo(targetWidth * 0.8, targetHeight * 0.8);
+              bgCtx.lineTo(targetWidth, targetHeight * 0.8);
+              bgCtx.lineTo(targetWidth, targetHeight);
+              bgCtx.closePath();
+              bgCtx.fill();
+
+              // Neon glow orbs
+              const neon1 = bgCtx.createRadialGradient(targetWidth * 0.2, targetHeight * 0.3, 10, targetWidth * 0.2, targetHeight * 0.3, targetWidth * 0.45);
+              neon1.addColorStop(0, 'rgba(244, 63, 94, 0.4)');
+              neon1.addColorStop(1, 'rgba(244, 63, 94, 0)');
+              bgCtx.fillStyle = neon1;
+              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+              const neon2 = bgCtx.createRadialGradient(targetWidth * 0.8, targetHeight * 0.35, 10, targetWidth * 0.8, targetHeight * 0.35, targetWidth * 0.45);
+              neon2.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+              neon2.addColorStop(1, 'rgba(56, 189, 248, 0)');
+              bgCtx.fillStyle = neon2;
+              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+            } else if (style === 'disco-fever') {
+              // Retro Disco Fever & Mirrorball Rays
+              bgCtx.fillStyle = '#06030c';
+              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+              // Radial prism rays from top center
+              const rayCount = 18;
+              const cx = targetWidth / 2;
+              const cy = targetHeight * 0.05;
+              const rayLength = Math.max(targetWidth, targetHeight) * 1.2;
+
+              for (let i = 0; i < rayCount; i++) {
+                const angle = (i / rayCount) * Math.PI + Math.PI * 0.05;
+                const spread = (Math.PI / rayCount) * 0.45;
+                bgCtx.save();
+                bgCtx.beginPath();
+                bgCtx.moveTo(cx, cy);
+                bgCtx.arc(cx, cy, rayLength, angle - spread / 2, angle + spread / 2);
+                bgCtx.closePath();
+                const colors = ['rgba(236,72,153,0.18)', 'rgba(59,130,246,0.18)', 'rgba(234,179,8,0.18)', 'rgba(168,85,247,0.18)', 'rgba(34,197,94,0.18)'];
+                bgCtx.fillStyle = colors[i % colors.length];
+                bgCtx.fill();
+                bgCtx.restore();
+              }
+
+              // Bokeh bubbles
+              for (let i = 0; i < 22; i++) {
+                const bx = ((i * 181) % targetWidth);
+                const by = ((i * 271) % targetHeight);
+                const br = (i % 5) * 6 + 8;
+                bgCtx.beginPath();
+                bgCtx.arc(bx, by, br, 0, Math.PI * 2);
+                bgCtx.fillStyle = i % 2 === 0 ? 'rgba(244, 114, 182, 0.25)' : 'rgba(96, 165, 250, 0.25)';
+                bgCtx.fill();
+              }
+            } else if (style === 'rose-gold') {
+              // Rose Gold & Champagne Sparkles
+              const grad = bgCtx.createRadialGradient(
+                targetWidth / 2, targetHeight * 0.4, targetWidth * 0.1,
+                targetWidth / 2, targetHeight * 0.5, targetWidth * 0.8
+              );
+              grad.addColorStop(0, '#4a1525');
+              grad.addColorStop(0.5, '#260a14');
+              grad.addColorStop(1, '#0c0206');
+              bgCtx.fillStyle = grad;
+              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+              // Champagne bubbles rising
+              for (let i = 0; i < 35; i++) {
+                const px = ((i * 149) % targetWidth);
+                const py = ((i * 197) % targetHeight);
+                const pr = (i % 4) + 1.5;
+                bgCtx.beginPath();
+                bgCtx.arc(px, py, pr, 0, Math.PI * 2);
+                bgCtx.fillStyle = 'rgba(253, 230, 138, 0.55)';
+                bgCtx.shadowColor = '#fb7185';
+                bgCtx.shadowBlur = 6;
+                bgCtx.fill();
+              }
+            } else if (style === 'red-carpet') {
+              // VIP Red Carpet & Paparazzi Strobe Flashes
+              const grad = bgCtx.createRadialGradient(
+                targetWidth / 2, targetHeight * 0.38, targetWidth * 0.05,
+                targetWidth / 2, targetHeight * 0.5, targetWidth * 0.9
+              );
+              grad.addColorStop(0, '#5e0b1b');
+              grad.addColorStop(0.4, '#31040d');
+              grad.addColorStop(0.85, '#120105');
+              grad.addColorStop(1, '#050002');
+              bgCtx.fillStyle = grad;
+              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+              // Carpet bottom perspective
+              const carpetGrad = bgCtx.createLinearGradient(0, targetHeight * 0.7, 0, targetHeight);
+              carpetGrad.addColorStop(0, 'rgba(159, 18, 57, 0.8)');
+              carpetGrad.addColorStop(1, 'rgba(225, 29, 72, 0.95)');
+              bgCtx.fillStyle = carpetGrad;
+              bgCtx.beginPath();
+              bgCtx.moveTo(targetWidth * 0.15, targetHeight * 0.7);
+              bgCtx.lineTo(targetWidth * 0.85, targetHeight * 0.7);
+              bgCtx.lineTo(targetWidth, targetHeight);
+              bgCtx.lineTo(0, targetHeight);
+              bgCtx.closePath();
+              bgCtx.fill();
+
+              // Camera flash starbursts
+              const flashes = [
+                [targetWidth * 0.12, targetHeight * 0.22, 14],
+                [targetWidth * 0.88, targetHeight * 0.28, 16],
+                [targetWidth * 0.25, targetHeight * 0.12, 10],
+                [targetWidth * 0.78, targetHeight * 0.15, 12],
+              ];
+              flashes.forEach(([fx, fy, size]) => {
+                bgCtx.save();
+                bgCtx.beginPath();
+                bgCtx.arc(fx, fy, size * 0.4, 0, Math.PI * 2);
+                bgCtx.fillStyle = '#ffffff';
+                bgCtx.shadowColor = '#ffffff';
+                bgCtx.shadowBlur = 15;
+                bgCtx.fill();
+
+                // Cross spikes
+                bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                bgCtx.lineWidth = 1.5;
+                bgCtx.beginPath();
+                bgCtx.moveTo(fx - size, fy);
+                bgCtx.lineTo(fx + size, fy);
+                bgCtx.moveTo(fx, fy - size);
+                bgCtx.lineTo(fx, fy + size);
+                bgCtx.stroke();
+                bgCtx.restore();
+              });
+            } else if (style === 'cyber-stage') {
+              // Cyber Laser Matrix Stage
+              bgCtx.fillStyle = '#050811';
+              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+              // Perspective floor grid lines
+              bgCtx.strokeStyle = 'rgba(6, 182, 212, 0.35)';
+              bgCtx.lineWidth = 1.5;
+              const horizon = targetHeight * 0.65;
+              for (let x = -targetWidth * 0.5; x <= targetWidth * 1.5; x += targetWidth * 0.12) {
+                bgCtx.beginPath();
+                bgCtx.moveTo(targetWidth / 2, horizon);
+                bgCtx.lineTo(x, targetHeight);
+                bgCtx.stroke();
+              }
+              for (let y = horizon; y <= targetHeight; y += (targetHeight - horizon) / 6) {
+                bgCtx.beginPath();
+                bgCtx.moveTo(0, y);
+                bgCtx.lineTo(targetWidth, y);
+                bgCtx.stroke();
+              }
+
+              // Sweeping Neon Lasers
+              bgCtx.strokeStyle = 'rgba(236, 72, 153, 0.6)';
+              bgCtx.lineWidth = 2.5;
+              bgCtx.shadowColor = '#ec4899';
+              bgCtx.shadowBlur = 10;
+              bgCtx.beginPath();
+              bgCtx.moveTo(0, targetHeight * 0.1);
+              bgCtx.lineTo(targetWidth, targetHeight * 0.5);
+              bgCtx.stroke();
+
+              bgCtx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+              bgCtx.shadowColor = '#06b6d4';
+              bgCtx.beginPath();
+              bgCtx.moveTo(targetWidth, targetHeight * 0.12);
+              bgCtx.lineTo(0, targetHeight * 0.55);
+              bgCtx.stroke();
             } else if (style === 'studio-dark') {
+              // Velvet Studio Dark
               bgCtx.fillStyle = '#08080a';
               bgCtx.fillRect(0, 0, targetWidth, targetHeight);
               const grad = bgCtx.createRadialGradient(
                 targetWidth / 2, targetHeight * 0.4, 20,
                 targetWidth / 2, targetHeight * 0.4, targetWidth * 0.7
               );
-              grad.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+              grad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
               grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-              bgCtx.fillStyle = grad;
-              bgCtx.fillRect(0, 0, targetWidth, targetHeight);
-            } else if (style === 'soho-neon') {
-              const grad = bgCtx.createLinearGradient(0, 0, targetWidth, targetHeight);
-              grad.addColorStop(0, '#2d0824');
-              grad.addColorStop(0.5, '#0c0517');
-              grad.addColorStop(1, '#051824');
               bgCtx.fillStyle = grad;
               bgCtx.fillRect(0, 0, targetWidth, targetHeight);
             }
 
-            // Draw subject over styled background
+            // Draw subject cutout cleanly over styled backdrop
             bgCtx.drawImage(canvas, 0, 0);
             return resolve(bgCanvas.toDataURL('image/jpeg', 0.94));
           }

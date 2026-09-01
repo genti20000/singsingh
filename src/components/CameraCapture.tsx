@@ -31,7 +31,8 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [activeFilter, setActiveFilter] = useState<BeautifyPreset>('glow');
   const [activeCutout, setActiveCutout] = useState<CutoutStyle>('transparent');
   const [activeFrameStyle, setActiveFrameStyle] = useState<FrameStyleId>(initialFrameStyle);
-  const [previewTab, setPreviewTab] = useState<'frames' | 'cutout' | 'beautify'>('cutout');
+  const [previewTab, setPreviewTab] = useState<'backgrounds' | 'frames' | 'beautify'>('backgrounds');
+  const [backgroundCategory, setBackgroundCategory] = useState<'all' | 'vip' | 'party' | 'scene' | 'studio'>('all');
   const [displayImage, setDisplayImage] = useState<string | null>(initialImage);
   const [isProcessingCutout, setIsProcessingCutout] = useState(false);
   const [isProcessingFilter, setIsProcessingFilter] = useState(false);
@@ -293,7 +294,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const currentFrameOption = FRAME_STYLES.find((f) => f.id === activeFrameStyle) || FRAME_STYLES[1];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-3 sm:p-6 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-2 sm:p-4 backdrop-blur-md overflow-y-auto overscroll-contain">
       <canvas ref={canvasRef} className="hidden" />
       <input
         type="file"
@@ -304,16 +305,16 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
       />
 
       <div
-        className="camera-capture-shell relative flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-[#e5b842]/50 bg-zinc-950 p-4 text-white shadow-2xl my-auto"
+        className="camera-capture-shell relative flex w-full max-w-md max-h-[96dvh] flex-col overflow-y-auto sm:overflow-hidden rounded-2xl sm:rounded-3xl border border-[#e5b842]/50 bg-zinc-950 p-3 sm:p-4 text-white shadow-2xl my-auto"
         style={!rawCapturedImage ? { backgroundImage: "url('/lkc-vip-birthday-spotlight.svg')" } : undefined}
       >
         {!rawCapturedImage && <div className="camera-artwork-wash absolute inset-0" aria-hidden="true" />}
 
         {/* Header Bar */}
-        <div className="relative z-10 mb-3 flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="relative z-10 mb-2 sm:mb-3 flex items-center justify-between border-b border-white/10 pb-2.5 sm:pb-3">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-[#e5b842] animate-ping" />
-            <span className="font-serif font-bold text-lg text-white">SingShot Selfie</span>
+            <div className="h-2.5 w-2.5 rounded-full bg-[#e5b842] animate-ping" />
+            <span className="font-serif font-bold text-base sm:text-lg text-white">SingShot Selfie</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -322,7 +323,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               <button
                 type="button"
                 onClick={() => setCountdownEnabled((prev) => !prev)}
-                className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all ${
+                className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer min-h-[36px] ${
                   countdownEnabled
                     ? 'bg-[#e5b842]/20 border-[#e5b842] text-[#e5b842]'
                     : 'bg-zinc-800 border-white/10 text-zinc-400 hover:text-white'
@@ -339,7 +340,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                 cancelCountdown();
                 onCancel();
               }}
-              className="rounded-full bg-zinc-800 p-2 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors"
+              className="rounded-full bg-zinc-800 p-2 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
             >
               <X className="h-5 w-5" />
             </button>
@@ -542,20 +543,20 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
         {/* PHOTO CUSTOMIZATION TABS & SELECTION GRIDS (Only visible after capture) */}
         {rawCapturedImage && (
-          <div className="relative z-10 mt-3 flex flex-col gap-2">
-            {/* Customization Nav Tabs: Frames | Cutout / No BG | Beautify */}
+          <div className="relative z-10 mt-2.5 flex flex-col gap-2">
+            {/* Customization Nav Tabs: Backgrounds | Frames | Beautify */}
             <div className="flex items-center rounded-xl bg-zinc-900/90 p-1 border border-white/10">
               <button
                 type="button"
-                onClick={() => setPreviewTab('cutout')}
+                onClick={() => setPreviewTab('backgrounds')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  previewTab === 'cutout'
-                    ? 'bg-amber-400 text-black shadow-md font-extrabold'
+                  previewTab === 'backgrounds'
+                    ? 'bg-gradient-to-r from-[#e5b842] to-amber-500 text-black shadow-md font-extrabold'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <Scissors className="w-3.5 h-3.5" />
-                <span>Remove BG</span>
+                <Layers className="w-3.5 h-3.5" />
+                <span>Backgrounds</span>
                 {activeCutout !== 'original' && (
                   <span className="w-2 h-2 rounded-full bg-black" />
                 )}
@@ -591,20 +592,42 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               </button>
             </div>
 
-            {/* TAB 1: BACKGROUND REMOVAL & CUTOUT PRESETS */}
-            {previewTab === 'cutout' && (
+            {/* TAB 1: BACKGROUNDS & VIRTUAL BACKDROPS */}
+            {previewTab === 'backgrounds' && (
               <div className="bg-zinc-900/90 border border-amber-400/30 rounded-2xl p-2.5 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between mb-2 px-1">
-                  <span className="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                    <Scissors className="w-3.5 h-3.5" /> Background Removal
-                  </span>
-                  <span className="text-[10px] text-zinc-400 font-medium">
-                    {CUTOUT_PRESETS.find((c) => c.id === activeCutout)?.description || 'Transparent VIP Cutout'}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                      <Layers className="w-3.5 h-3.5" /> Virtual Backdrops
+                    </span>
+                    <span className="text-[9px] bg-amber-400/20 text-amber-300 font-bold px-1.5 py-0.2 rounded-full border border-amber-400/40">
+                      {CUTOUT_PRESETS.find((c) => c.id === activeCutout)?.label || 'Active'}
+                    </span>
+                  </div>
+
+                  {/* Category Filter Pills */}
+                  <div className="flex items-center gap-1">
+                    {(['all', 'vip', 'party', 'scene', 'studio'] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setBackgroundCategory(cat)}
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase transition-all ${
+                          backgroundCategory === cat
+                            ? 'bg-amber-400 text-black'
+                            : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {CUTOUT_PRESETS.map((preset) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[145px] overflow-y-auto pr-1">
+                  {CUTOUT_PRESETS.filter(
+                    (preset) => backgroundCategory === 'all' || preset.category === backgroundCategory
+                  ).map((preset) => {
                     const isSelected = activeCutout === preset.id;
                     return (
                       <button
@@ -613,7 +636,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                         onClick={() => setActiveCutout(preset.id)}
                         className={`p-2 rounded-xl text-left border transition-all flex flex-col justify-between gap-1 ${
                           isSelected
-                            ? 'border-amber-400 bg-zinc-800 shadow-[0_0_15px_rgba(251,191,36,0.3)] ring-1 ring-amber-400'
+                            ? 'border-amber-400 bg-zinc-800 shadow-[0_0_15px_rgba(251,191,36,0.3)] ring-1 ring-amber-400 scale-101'
                             : 'border-white/10 bg-zinc-950/80 hover:border-white/30 text-zinc-300'
                         }`}
                       >
@@ -623,7 +646,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                           </span>
                           {isSelected && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
                         </div>
-                        <span className="text-[11px] font-semibold text-zinc-300 truncate">
+                        <span className="text-[11px] font-semibold text-zinc-200 truncate">
                           {preset.label}
                         </span>
                       </button>
@@ -715,27 +738,27 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         )}
 
         {/* Action Controls Footer */}
-        <div className="relative z-10 mt-3 flex items-center justify-between gap-3">
+        <div className="relative z-10 mt-2 sm:mt-3 flex items-center justify-between gap-3">
           {rawCapturedImage ? (
             <>
               <button
                 onClick={handleRetake}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 py-3 text-sm font-semibold text-white hover:bg-zinc-700 transition-colors"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 py-3 px-4 min-h-[48px] text-sm font-semibold text-white hover:bg-zinc-700 active:scale-98 transition-all cursor-pointer"
               >
                 <RefreshCw className="h-4 w-4" /> Retake
               </button>
               <button
                 onClick={handleConfirm}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#e5b842] to-amber-500 py-3 text-sm font-extrabold text-black shadow-lg hover:brightness-110 transition-all"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#e5b842] to-amber-500 py-3 px-4 min-h-[48px] text-sm font-extrabold text-black shadow-lg hover:brightness-110 active:scale-98 transition-all cursor-pointer"
               >
-                <Check className="h-4 w-4" /> Use This Photo
+                <Check className="h-4 w-4" /> Use Photo
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 rounded-xl bg-zinc-800 px-3 py-3 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors"
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-zinc-800 px-3.5 py-3 min-h-[48px] text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 active:scale-98 transition-all cursor-pointer"
                 title="Upload Photo"
               >
                 <Upload className="h-4 w-4" /> Upload
@@ -745,7 +768,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               <button
                 onClick={handleStartCapture}
                 disabled={isLoadingCamera || !!cameraError}
-                className={`flex h-14 w-14 items-center justify-center rounded-full transition-transform disabled:opacity-50 ${
+                className={`flex h-14 w-14 items-center justify-center rounded-full transition-transform cursor-pointer disabled:opacity-50 ${
                   countdown !== null
                     ? 'bg-gradient-to-r from-red-500 to-amber-500 p-1 animate-pulse shadow-[0_0_25px_rgba(239,68,68,0.7)]'
                     : 'bg-gradient-to-r from-[#e5b842] via-yellow-400 to-amber-500 p-1 shadow-[0_0_20px_rgba(229,184,66,0.5)] hover:scale-105 active:scale-95'
@@ -763,7 +786,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
               <button
                 onClick={toggleCameraFacing}
-                className="flex items-center gap-2 rounded-xl bg-zinc-800 px-3 py-3 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors"
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-zinc-800 px-3.5 py-3 min-h-[48px] text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 active:scale-98 transition-all cursor-pointer"
                 title="Flip Camera"
               >
                 <FlipHorizontal className="h-4 w-4" /> Flip

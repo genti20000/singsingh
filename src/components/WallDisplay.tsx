@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import QRCode from 'qrcode';
-import { Submission, Venue, WallLayoutMode } from '../types';
+import { Submission, Venue, WallLayoutMode, WallBackgroundTheme } from '../types';
 import { BrandedCard } from './BrandedCard';
 import { ParticleCanvas } from './ParticleCanvas';
 import { LondonKaraokeLogo } from './LondonKaraokeLogo';
@@ -21,6 +21,8 @@ import {
   QrCode,
   RefreshCw,
   CheckCircle2,
+  Layers,
+  Palette,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -28,12 +30,74 @@ interface WallDisplayProps {
   venue: Venue;
 }
 
+export const WALL_BACKGROUND_THEMES: {
+  id: WallBackgroundTheme;
+  name: string;
+  badge: string;
+  gradientClass: string;
+  accent: string;
+  subtext: string;
+}[] = [
+  {
+    id: 'soho-gold',
+    name: 'London Soho Gold',
+    badge: '👑 SOHO GOLD',
+    gradientClass: 'from-[#141005] via-[#080602] to-[#040301]',
+    accent: '#e5b842',
+    subtext: 'Signature gold stage aura & sparkling particles',
+  },
+  {
+    id: 'cyber-neon',
+    name: 'Cyber Neon Lounge',
+    badge: '⚡ CYBER NEON',
+    gradientClass: 'from-[#190924] via-[#080514] to-[#030612]',
+    accent: '#06b6d4',
+    subtext: 'Magenta and cyan pulsing night club beams',
+  },
+  {
+    id: 'velvet-rose',
+    name: 'Velvet Rose Champagne',
+    badge: '🥂 ROSE GOLD',
+    gradientClass: 'from-[#220713] via-[#0e0308] to-[#040103]',
+    accent: '#fb7185',
+    subtext: 'Romantic celebratory champagne sparkles',
+  },
+  {
+    id: 'midnight-sapphire',
+    name: 'Midnight Sapphire',
+    badge: '🌌 SAPPHIRE',
+    gradientClass: 'from-[#061226] via-[#030914] to-[#01040a]',
+    accent: '#38bdf8',
+    subtext: 'Deep executive navy and constellation stars',
+  },
+  {
+    id: 'disco-fever',
+    name: 'Retro Disco Fever',
+    badge: '🪩 DISCO FEVER',
+    gradientClass: 'from-[#1c0828] via-[#0a0314] to-[#04010a]',
+    accent: '#ec4899',
+    subtext: 'Multi-colored rainbow mirrorball prisms',
+  },
+  {
+    id: 'emerald-stage',
+    name: 'Emerald VIP Stage',
+    badge: '🍀 EMERALD VIP',
+    gradientClass: 'from-[#041a10] via-[#020b07] to-[#010503]',
+    accent: '#10b981',
+    subtext: 'Electric green and gold VIP stage lights',
+  },
+];
+
 export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [layoutMode, setLayoutMode] = useState<WallLayoutMode>(
     venue.wall_layout_mode || 'spotlight'
   );
+  const [backgroundTheme, setBackgroundTheme] = useState<WallBackgroundTheme>(
+    venue.wall_background_theme || 'soho-gold'
+  );
+  const [showThemePicker, setShowThemePicker] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [featuredSub, setFeaturedSub] = useState<Submission | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
@@ -61,6 +125,13 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
       setLayoutMode(venue.wall_layout_mode);
     }
   }, [venue.wall_layout_mode, layoutMode]);
+
+  // Sync background theme from props if updated
+  useEffect(() => {
+    if (venue.wall_background_theme && venue.wall_background_theme !== backgroundTheme) {
+      setBackgroundTheme(venue.wall_background_theme);
+    }
+  }, [venue.wall_background_theme, backgroundTheme]);
 
   // 1. Generate high-resolution QR Code for guest scanning
   useEffect(() => {
@@ -210,8 +281,14 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
       if (event.type === 'VENUE_UPDATED' && (event.data as Venue)?.wall_layout_mode) {
         setLayoutMode((event.data as Venue).wall_layout_mode!);
       }
+      if (event.type === 'VENUE_UPDATED' && (event.data as Venue)?.wall_background_theme) {
+        setBackgroundTheme((event.data as Venue).wall_background_theme!);
+      }
       if (event.type === 'WALL_LAYOUT_CHANGED' && (event.data as { mode?: WallLayoutMode })?.mode) {
         setLayoutMode((event.data as { mode: WallLayoutMode }).mode);
+      }
+      if (event.type === 'WALL_BACKGROUND_CHANGED' && (event.data as { theme?: WallBackgroundTheme })?.theme) {
+        setBackgroundTheme((event.data as { theme: WallBackgroundTheme }).theme);
       }
     });
 
@@ -322,10 +399,25 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
     };
   }, [submissions, currentIndex]);
 
+  const currentThemeConfig = useMemo(() => {
+    return (
+      WALL_BACKGROUND_THEMES.find((t) => t.id === backgroundTheme) ||
+      WALL_BACKGROUND_THEMES[0]
+    );
+  }, [backgroundTheme]);
+
+  const handleSelectTheme = (themeId: WallBackgroundTheme) => {
+    setBackgroundTheme(themeId);
+    DataService.updateVenue({ wall_background_theme: themeId });
+    setShowThemePicker(false);
+  };
+
   return (
-    <div className="singshot-wall relative h-screen w-screen overflow-hidden bg-[#050505] text-white flex flex-col justify-between select-none font-sans">
+    <div
+      className={`singshot-wall relative h-screen w-screen overflow-hidden bg-gradient-to-b ${currentThemeConfig.gradientClass} text-white flex flex-col justify-between select-none font-sans transition-colors duration-700`}
+    >
       {/* Background Nightlife Ambient Particle Canvas */}
-      <ParticleCanvas color="#e5b842" density={75} speed={0.8} />
+      <ParticleCanvas theme={backgroundTheme} density={75} speed={0.8} />
 
       {/* Real-time New Photo Arrival Toast Banner (Smooth Slide-In) */}
       <AnimatePresence>
@@ -391,8 +483,72 @@ export const WallDisplay: React.FC<WallDisplayProps> = ({ venue }) => {
             </div>
           </div>
 
-          {/* Quick Controls: Refresh, Play/Pause, Fullscreen */}
+          {/* Quick Controls: Background Theme, Refresh, Play/Pause, Fullscreen */}
           <div className="flex items-center gap-1 ml-1.5 pl-1.5 border-l border-white/15">
+            {/* Background Theme Selector Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowThemePicker(!showThemePicker)}
+                className={`p-1.5 rounded-xl border transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
+                  showThemePicker
+                    ? 'bg-[#e5b842] text-black border-[#e5b842]'
+                    : 'bg-zinc-900/90 border-white/10 hover:bg-zinc-800 text-zinc-300 hover:text-white'
+                }`}
+                title="Change Wall Background Theme"
+              >
+                <Palette className="w-3.5 h-3.5" />
+                <span className="hidden md:inline text-[10px] uppercase">{currentThemeConfig.name.split(' ')[0]}</span>
+              </button>
+
+              {/* Theme Picker Dropdown Overlay */}
+              <AnimatePresence>
+                {showThemePicker && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-10 left-0 w-64 bg-zinc-950/95 border border-[#e5b842]/50 p-2 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.9)] backdrop-blur-2xl z-50 flex flex-col gap-1.5"
+                  >
+                    <div className="flex items-center justify-between px-1.5 pb-1 border-b border-white/10">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#e5b842]">
+                        Wall Background Theme
+                      </span>
+                      <span className="text-[9px] text-zinc-400 font-medium">Live Canvas</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-1 max-h-56 overflow-y-auto">
+                      {WALL_BACKGROUND_THEMES.map((theme) => {
+                        const isSelected = backgroundTheme === theme.id;
+                        return (
+                          <button
+                            key={theme.id}
+                            type="button"
+                            onClick={() => handleSelectTheme(theme.id)}
+                            className={`p-2 rounded-xl text-left border transition-all flex items-center justify-between gap-2 ${
+                              isSelected
+                                ? 'border-[#e5b842] bg-zinc-800/90 text-white font-bold ring-1 ring-[#e5b842]'
+                                : 'border-white/5 bg-zinc-900/60 hover:bg-zinc-800/60 text-zinc-300'
+                            }`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-[11px] font-bold flex items-center gap-1">
+                                <span>{theme.badge}</span>
+                              </span>
+                              <span className="text-[9px] text-zinc-400 font-normal truncate">
+                                {theme.subtext}
+                              </span>
+                            </div>
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#e5b842] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={() => fetchApproved(true)}
               className="p-1.5 rounded-xl bg-zinc-900/90 border border-white/10 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all cursor-pointer"

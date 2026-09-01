@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { OccasionDetails, Venue } from '../../types';
 import { BrandedCard } from '../BrandedCard';
-import { Sparkles, ShieldCheck } from 'lucide-react';
+import { Sparkles, ShieldCheck, ArrowLeft, Send, Check } from 'lucide-react';
 
 interface GuestDetailsStepProps {
   imageUrl: string;
@@ -11,6 +11,15 @@ interface GuestDetailsStepProps {
   venue?: Venue;
   isSubmitting?: boolean;
 }
+
+const QUICK_CAPTIONS = [
+  'Living the Soho Dream 🥂',
+  'Karaoke Royalty 🎤',
+  'Happy Birthday! 🎂',
+  'London Soho Live 🔥',
+  'VIP Lounge Vibes 🌟',
+  'Squad on Stage 👑',
+];
 
 export const GuestDetailsStep: React.FC<GuestDetailsStepProps> = ({
   imageUrl,
@@ -50,102 +59,121 @@ export const GuestDetailsStep: React.FC<GuestDetailsStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-md mx-auto p-4 sm:p-6 bg-zinc-950/85 border border-[#e5b842]/30 rounded-3xl backdrop-blur-xl text-white shadow-2xl">
-      <div className="text-center">
-        <span className="text-[10px] font-bold text-[#e5b842] uppercase tracking-widest bg-[#e5b842]/10 px-3 py-1 rounded-full border border-[#e5b842]/30">
-          Step 3 of 3
-        </span>
-        <h2 className="font-serif text-2xl sm:text-3xl font-bold mt-2 text-white">
-          Your Details
+    <div className="flex flex-col justify-between h-full max-h-full w-full max-w-md mx-auto p-3 sm:p-5 bg-zinc-950/95 border border-[#e5b842]/30 rounded-3xl backdrop-blur-2xl text-white shadow-[0_20px_50px_rgba(0,0,0,0.8)] select-none">
+      {/* Header */}
+      <div className="text-center shrink-0">
+        <div className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black text-[#e5b842] uppercase tracking-widest bg-[#e5b842]/10 px-3 py-0.5 rounded-full border border-[#e5b842]/30">
+          Step 3 of 3 • Stage Details
+        </div>
+        <h2 className="font-serif text-lg sm:text-2xl font-black mt-1 text-white tracking-tight">
+          Your Stage Details
         </h2>
-        <p className="text-xs text-zinc-400 mt-1">
-          Only requested so staff can introduce you on screen
+        <p className="text-[11px] sm:text-xs text-zinc-400">
+          Add your name and an optional message for venue screens
         </p>
       </div>
 
       {/* Live Card Preview */}
-      <div className="flex flex-col items-center">
-        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-[#e5b842]" /> Live Card Preview
-        </span>
-        <div className="w-full max-w-[280px] scale-95 transform transition-all">
+      <div className="flex flex-col items-center my-auto shrink-0 py-1">
+        <div className="w-full max-w-[190px] sm:max-w-[220px] scale-95 transform transition-all drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)]">
           <BrandedCard submission={mockSubmission} venue={venue} size="thumb" />
         </div>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div>
-          <label className="text-xs font-semibold text-zinc-300 block mb-1">
-            First Name or Nickname <span className="text-zinc-500 font-normal">(Optional)</span>
-          </label>
-          <input
-            type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            placeholder="e.g. Sophie (or leave blank for VIP Guest)"
-            className="w-full bg-zinc-900 border border-white/20 rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#e5b842] transition-colors"
-          />
+      {/* Form & Quick Captions */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2 shrink-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] font-bold text-zinc-300 block mb-1 uppercase tracking-wide">
+              Your Name / Nickname
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="e.g. Sophie"
+              maxLength={24}
+              className="w-full bg-zinc-900/90 border border-white/20 rounded-xl p-2.5 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#e5b842] focus:ring-1 focus:ring-[#e5b842] transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-zinc-300 block mb-1 uppercase tracking-wide">
+              Caption (Optional)
+            </label>
+            <input
+              type="text"
+              maxLength={60}
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="e.g. Living the Soho Dream! 🎤"
+              className="w-full bg-zinc-900/90 border border-white/20 rounded-xl p-2.5 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#e5b842] focus:ring-1 focus:ring-[#e5b842] transition-colors"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="text-xs font-semibold text-zinc-300 block mb-1">
-            Short Caption <span className="text-zinc-500 font-normal">(Optional, max 60 chars)</span>
-          </label>
-          <input
-            type="text"
-            maxLength={60}
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="e.g. Singing my heart out tonight! 🎤"
-            className="w-full bg-zinc-900 border border-white/20 rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#e5b842] transition-colors"
-          />
+        {/* Quick Caption Suggestions */}
+        <div className="flex flex-wrap gap-1 items-center">
+          <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mr-1">Quick:</span>
+          {QUICK_CAPTIONS.slice(0, 3).map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setCaption(item)}
+              className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border transition-all cursor-pointer ${
+                caption === item
+                  ? 'bg-[#e5b842] text-black border-[#e5b842]'
+                  : 'bg-zinc-900 text-zinc-400 border-white/10 hover:text-white hover:border-white/30'
+              }`}
+            >
+              {item}
+            </button>
+          ))}
         </div>
 
         {/* Consent Checkbox */}
-        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-zinc-900/60 border border-white/10 cursor-pointer">
+        <label className="flex items-center gap-2.5 p-2 rounded-xl bg-zinc-900/70 border border-white/10 cursor-pointer">
           <input
             type="checkbox"
             checked={hasConsent}
             onChange={(e) => setHasConsent(e.target.checked)}
-            className="mt-0.5 accent-[#e5b842] h-4 w-4 rounded"
+            className="accent-[#e5b842] h-4 w-4 rounded shrink-0 cursor-pointer"
           />
-          <div className="text-xs text-zinc-300 leading-tight">
-            I agree to have my selfie displayed on {venue?.name || 'SingShot'} venue screens during tonight's event.
+          <div className="text-[10px] sm:text-[11px] text-zinc-300 leading-tight">
+            I agree to display my selfie on {venue?.name || 'SingShot'} venue screens tonight.
           </div>
         </label>
 
         {error && (
-          <div className="text-xs text-rose-400 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/30 text-center">
+          <div className="text-[10px] text-rose-400 bg-rose-500/10 p-2 rounded-xl border border-rose-500/30 text-center font-medium">
             {error}
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 justify-center">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#e5b842]" />
-          <span>No account creation or email required</span>
-        </div>
-
         {/* Action buttons */}
-        <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex items-center justify-between gap-2.5 pt-1">
           <button
             type="button"
             onClick={onBack}
             disabled={isSubmitting}
-            className="px-5 py-3 rounded-xl bg-zinc-800 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors"
+            className="min-h-[44px] px-4 py-2 rounded-2xl bg-zinc-900 border border-white/10 text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-1.5"
           >
-            Back
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-[#e5b842] via-yellow-400 to-amber-500 text-black font-extrabold text-sm shadow-[0_0_20px_rgba(229,184,66,0.4)] hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2"
+            className="flex-1 min-h-[44px] py-2.5 px-5 rounded-2xl bg-gradient-to-r from-[#ffe066] via-[#f59e0b] to-[#d97706] text-black font-black text-xs sm:text-sm shadow-[0_0_30px_rgba(229,184,66,0.45)] hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? (
-              <span>Submitting...</span>
+              <span className="flex items-center gap-1.5">
+                <span className="animate-spin h-3.5 w-3.5 border-2 border-black border-t-transparent rounded-full" />
+                <span>BROADCASTING...</span>
+              </span>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" /> SUBMIT TO SCREEN
+                <Sparkles className="w-4 h-4 text-black stroke-[2.5]" />
+                <span className="uppercase tracking-wider">SUBMIT TO BIG SCREEN</span>
               </>
             )}
           </button>
